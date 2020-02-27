@@ -1,0 +1,5 @@
+jupyterhub
+tornado>=5.0
+Click>=7.0
+aiohttp
+simpervisor

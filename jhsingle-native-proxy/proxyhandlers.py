@@ -144,8 +144,6 @@ class ProxyHandler(WebSocketHandlerMixin, web.RequestHandler):
             headers['X-Forwarded-Context'] = context_path
             headers['X-ProxyContextPath'] = context_path
 
-        self.log.debug(client_uri)
-
         req = httpclient.HTTPRequest(
             client_uri, method=self.request.method, body=body,
             headers=headers, **self.proxy_request_options())
@@ -165,8 +163,6 @@ class ProxyHandler(WebSocketHandlerMixin, web.RequestHandler):
             {base_url}/proxy/absolute/{port([0-9]+)}/{proxied_path}
             {base_url}/{proxy_base}/{proxied_path}
         '''
-
-        self.log.debug('In proxy: {}, {}, {}'.format(host, port, proxied_path))
 
         if not self._check_host_whitelist(host):
             self.set_status(403)
@@ -205,7 +201,6 @@ class ProxyHandler(WebSocketHandlerMixin, web.RequestHandler):
             self.set_status(500)
             self.write(str(response.error))
         else:
-            self.log.debug(response.code)
             self.set_status(response.code, response.reason)
 
             # clear tornado default header

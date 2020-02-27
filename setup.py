@@ -23,7 +23,7 @@ setuptools.setup(
     install_requires=install_requires,
     include_package_data=True,
     zip_safe=False,
-    entry_points={"console_scripts": ["jhsingle-native-proxy = native-proxy.main:run"]},
+    entry_points={"console_scripts": ["jhsingle-native-proxy = jhsingle-native-proxy.main:run"]},
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

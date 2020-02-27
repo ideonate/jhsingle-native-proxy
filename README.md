@@ -54,4 +54,4 @@ cd jhsingle-native-proxy
 pip install -e .
 ```
 
-To run directly in python: `python -m jhsingle-native-proxy.main <rest of command line>`
+To run directly in python: `python -m jhsingle_native_proxy.main <rest of command line>`

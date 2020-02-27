@@ -15,7 +15,7 @@ Install using pip.
 pip install jhsingle-native-proxy
 ```
 
-The process to start is specified on the command line, for example a streamlit web app:
+The process to start is specified on the command line, for example a [streamlit](https://streamlit.io/) web app:
 
 ```
 jhsingle-native-proxy streamlit hello
@@ -43,6 +43,13 @@ To run jhsingle-native-proxy on port 8000, and the end process on 8505:
 
 ```
 jhsingle-native-proxy --serverport 8000 --port 8505 -- streamlit hello --server.port {port} --server.headless True --server.enableCORS False
+```
+
+Use the --prefix option to specify the first part of the URL to listen to (and then strip before forwarding). E.g. 
+--prefix /user/dan will mean requests on http://localhost:888/user/dan/something will forward to http://localhost:8500/something
+
+```
+jhsingle-native-proxy --serverport 8000 --port 8505 --prefix /user/dan -- streamlit hello --server.port {port} --server.headless True --server.enableCORS False
 ```
 
 ## Development install

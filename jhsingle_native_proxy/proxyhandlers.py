@@ -470,6 +470,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
     async def proxy(self, port, path):
         if not path.startswith('/'):
             path = '/' + path
+
         if self.mappath:
             if callable(self.mappath):
                 raise Exception("Not implemented: path = call_with_asked_args(self.mappath, {'path': path})")
@@ -516,7 +517,6 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
     class _Proxy(SuperviseAndProxyHandler):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
-            self.log.info("Made _Proxy")
             self.name = name
             self.proxy_base = name
             self.absolute_url = absolute_url

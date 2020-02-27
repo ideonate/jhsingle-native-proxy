@@ -528,6 +528,7 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
             return {
                 'port': self.port,
                 'base_url': self.base_url,
+                '--': '--'
             }
         @property
         def base_url(self):

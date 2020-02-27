@@ -27,7 +27,7 @@ But you will normally need to tell jhsingle-native-proxy which port the end proc
 end process which port you want it to use (which you can do with the substitution variable {port}).
 
 Note the use of -- to signal the end of command line options to jhsingle-native-proxy. Then the third party command line 
-itself can contain options starting with dashes: 
+itself can contain options starting with dashes. An alternative is to use the substitution {--}
 
 ```
 jhsingle-native-proxy -- streamlit hello --server.port {port} --server.headless True --server.enableCORS False
@@ -36,20 +36,25 @@ jhsingle-native-proxy -- streamlit hello --server.port {port} --server.headless 
 To run jhsingle-native-proxy itself listening on a different port use:
 
 ```
-jhsingle-native-proxy --serverport 8000 streamlit hello
+jhsingle-native-proxy --port 8000 streamlit hello
 ```
 
 To run jhsingle-native-proxy on port 8000, and the end process on 8505:
 
 ```
-jhsingle-native-proxy --serverport 8000 --port 8505 -- streamlit hello --server.port {port} --server.headless True --server.enableCORS False
+jhsingle-native-proxy --port 8000 --destport 8505 -- streamlit hello --server.port {port} --server.headless True --server.enableCORS False
 ```
 
 Use the --prefix option to specify the first part of the URL to listen to (and then strip before forwarding). E.g. 
 --prefix /user/dan will mean requests on http://localhost:888/user/dan/something will forward to http://localhost:8500/something
 
+You can also specify --ip 0.0.0.0 for the address to listen on.
+
+Below we use the substitution {--} for the command to run, allowing us to specify --ip to jhsingle-native-proxy instead of the 
+command being run.  
+
 ```
-jhsingle-native-proxy --serverport 8000 --port 8505 --prefix /user/dan -- streamlit hello --server.port {port} --server.headless True --server.enableCORS False
+jhsingle-native-proxy --port 8000 --destport 8505 --prefix /user/dan/ streamlit hello {--}server.port {port} {--}server.headless True {--}server.enableCORS False --ip 0.0.0.0 
 ```
 
 ## Development install

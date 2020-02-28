@@ -45,8 +45,8 @@ To run jhsingle-native-proxy on port 8000, and the end process on 8505:
 jhsingle-native-proxy --port 8000 --destport 8505 -- streamlit hello --server.port {port} --server.headless True --server.enableCORS False
 ```
 
-Use the --prefix option to specify the first part of the URL to listen to (and then strip before forwarding). E.g. 
---prefix /user/dan will mean requests on http://localhost:888/user/dan/something will forward to http://localhost:8500/something
+Use the JUPYTERHUB_SERVICE_PREFIX env var to specify the first part of the URL to listen to (and then strip before forwarding). E.g. 
+JUPYTERHUB_SERVICE_PREFIX=/user/dan will mean requests on http://localhost:8888/user/dan/something will forward to http://localhost:8500/something
 
 You can also specify --ip 0.0.0.0 for the address to listen on.
 
@@ -54,7 +54,7 @@ Below we use the substitution {--} for the command to run, allowing us to specif
 command being run.  
 
 ```
-jhsingle-native-proxy --port 8000 --destport 8505 --prefix /user/dan/ streamlit hello {--}server.port {port} {--}server.headless True {--}server.enableCORS False --ip 0.0.0.0 
+jhsingle-native-proxy --port 8000 --destport 8505 streamlit hello {--}server.port {port} {--}server.headless True {--}server.enableCORS False --ip 0.0.0.0 
 ```
 
 ## Development install

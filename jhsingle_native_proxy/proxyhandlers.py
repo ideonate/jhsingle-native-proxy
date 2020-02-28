@@ -8,9 +8,10 @@ from asyncio import Lock
 from .util import url_path_join
 from .websocket import WebSocketHandlerMixin, pingable_ws_connect
 from tornado.log import app_log
+from jupyterhub.services.auth import HubOAuthenticated
 
 
-class ProxyHandler(WebSocketHandlerMixin, web.RequestHandler):
+class ProxyHandler(WebSocketHandlerMixin, HubOAuthenticated):
     """
     A tornado request handler that proxies HTTP and websockets from
     a given host/port combination. This class is not meant to be
@@ -25,6 +26,9 @@ class ProxyHandler(WebSocketHandlerMixin, web.RequestHandler):
         self.absolute_url = kwargs.pop('absolute_url', False)
         self.host_whitelist = kwargs.pop('host_whitelist', ['localhost', '127.0.0.1'])
         super().__init__(*args, **kwargs)
+
+    def initialize(self, hub_auth, *args, **kwargs):
+        self.hub_auth = hub_auth
 
     @property
     def log(self):
@@ -155,7 +159,7 @@ class ProxyHandler(WebSocketHandlerMixin, web.RequestHandler):
         else:
             return host in self.host_whitelist
 
-    #@web.authenticated
+    @web.authenticated
     async def proxy(self, host, port, proxied_path):
         '''
         This serverextension handles:
@@ -376,10 +380,12 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         self.mappath = {}
         super().__init__(*args, **kwargs)
 
-    def initialize(self, state):
+    def initialize(self, state, *args, **kwargs):
         self.state = state
         if 'proc_lock' not in state:
             state['proc_lock'] = Lock()
+
+        super().initialize(*args, **kwargs)
 
     name = 'process'
 
@@ -465,8 +471,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
                     del self.state['proc']
                     raise
 
-
-    #@web.authenticated
+    @web.authenticated
     async def proxy(self, port, path):
         if not path.startswith('/'):
             path = '/' + path
@@ -549,7 +554,6 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
                 raise ValueError('Value of unrecognized type {}'.format(type(value)))
 
         def get_cmd(self):
-            print('command {}'.format(command))
             if callable(command):
                 raise Exception("Not implemented: self._render_template(call_with_asked_args(command, self.process_args))")
             else:

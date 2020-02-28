@@ -15,13 +15,15 @@ def make_app(destport, prefix, command):
     hub_auth = HubOAuth()
 
     return web.Application([
-        (r"^"+re.escape(prefix)+r"(.*)", proxy_handler, dict(state={}, hub_auth=hub_auth)),
         (
-            url_path_join(
-                prefix, 'oauth_callback'
-            ),
+            url_path_join(prefix, 'oauth_callback'),
             HubOAuthCallbackHandler,
         ),
+        (
+            r"^"+re.escape(prefix)+r"(.*)",
+            proxy_handler,
+            dict(state={}, hub_auth=hub_auth)
+        )
     ],
     debug=True,
     login_url=hub_auth.login_url)

@@ -482,10 +482,13 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
             else:
                 path = self.mappath.get(path, path)
 
+        self.log.debug('In proxy')
+
         await self.ensure_process()
 
-        return await super().proxy(self.port, path)
+        self.log.debug('In proxy ensured process')
 
+        return await super().proxy(self.port, path)
 
     async def http_get(self, path):
         self.log.info('SuperviseAndProxyHandler http_get {} {}'.format(self.port, path))

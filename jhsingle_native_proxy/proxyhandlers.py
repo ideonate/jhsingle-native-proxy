@@ -11,7 +11,7 @@ from tornado.log import app_log
 from jupyterhub.services.auth import HubOAuthenticated
 
 
-class ProxyHandler(WebSocketHandlerMixin, HubOAuthenticated):
+class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
     """
     A tornado request handler that proxies HTTP and websockets from
     a given host/port combination. This class is not meant to be
@@ -26,9 +26,6 @@ class ProxyHandler(WebSocketHandlerMixin, HubOAuthenticated):
         self.absolute_url = kwargs.pop('absolute_url', False)
         self.host_whitelist = kwargs.pop('host_whitelist', ['localhost', '127.0.0.1'])
         super().__init__(*args, **kwargs)
-
-    def initialize(self, hub_auth, *args, **kwargs):
-        self.hub_auth = hub_auth
 
     @property
     def log(self):

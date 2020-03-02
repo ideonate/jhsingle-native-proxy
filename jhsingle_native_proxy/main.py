@@ -1,3 +1,4 @@
+from tornado.httpserver import HTTPServer
 from tornado import web, ioloop
 from tornado.log import app_log
 from .proxyhandlers import _make_serverproxy_handler
@@ -5,14 +6,12 @@ import click
 import re
 import os
 import logging
-from jupyterhub.services.auth import HubOAuth, HubOAuthCallbackHandler
+from jupyterhub.services.auth import HubOAuthCallbackHandler, HubOAuth
 from .util import url_path_join
 
 def make_app(destport, prefix, command):
 
     proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 10, False, destport, {})
-
-    hub_auth = HubOAuth()
 
     return web.Application([
         (
@@ -22,11 +21,12 @@ def make_app(destport, prefix, command):
         (
             r"^"+re.escape(prefix)+r"(.*)",
             proxy_handler,
-            dict(state={}, hub_auth=hub_auth)
+            dict(state={})
         )
     ],
     debug=True,
-    login_url=hub_auth.login_url)
+    cookie_secret=os.urandom(32)
+    )
 
 
 @click.command()
@@ -44,7 +44,11 @@ def run(port, destport, ip, debug, command):
     prefix = os.environ.get('JUPYTERHUB_SERVICE_PREFIX', '/')
 
     app = make_app(destport, prefix, list(command))
-    app.listen(port, ip)
+
+    http_server = HTTPServer(app)
+
+    http_server.listen(port, ip)
+
     print("Starting jhsingle-native-proxy server on address {} port {}, proxying to port {}".format(ip, port, destport))
     print("URL Prefix: {}".format(prefix))
     print("Command: {}".format(command))

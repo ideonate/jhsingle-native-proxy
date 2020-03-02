@@ -4,6 +4,7 @@ Wrap an arbitrary webapp so it can be used in place of jupyter-singleuser in a J
 
 Within JupyterHub this allows similar operation to [jupyter-server-proxy](https://github.com/jupyterhub/jupyter-server-proxy) except it also removes the Jupyter notebook itself, so is working directly with the arbitrary web service.
 
+OAuth authentication is enforced based on JUPYTERHUB_* environment variables.
 
 This is a very basic alpha version.
 

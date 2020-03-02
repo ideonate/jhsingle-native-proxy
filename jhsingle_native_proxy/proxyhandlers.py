@@ -9,6 +9,16 @@ from .util import url_path_join
 from .websocket import WebSocketHandlerMixin, pingable_ws_connect
 from tornado.log import app_log
 from jupyterhub.services.auth import HubOAuthenticated
+from urllib.parse import urlunparse, urlparse
+
+
+class AddSlashHandler(web.RequestHandler):
+    """Add trailing slash to URLs that need them."""
+    #@web.authenticated
+    def get(self, *args):
+        src = urlparse(self.request.uri)
+        dest = src._replace(path=src.path + '/')
+        self.redirect(urlunparse(dest))
 
 
 class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
@@ -538,6 +548,16 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
         @property
         def base_url(self):
             return '/' #self.settings.get('base_url', '/')
+
+        @property
+        def hub_users(self):
+            return {self.settings['user']}
+
+        @property
+        def hub_groups(self):
+            if self.settings['group']:
+                return {self.settings['group']}
+            return set()
 
         def _render_template(self, value):
             args = self.process_args

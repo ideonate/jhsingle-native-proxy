@@ -8,7 +8,7 @@ import inspect
 import asyncio
 import concurrent.futures
 
-from tornado import gen, web, httpclient, httputil, process, websocket, ioloop, version_info
+from tornado import gen, web, httpclient, httputil, websocket, ioloop, version_info
 
 
 def maybe_future(obj):

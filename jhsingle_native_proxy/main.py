@@ -1,7 +1,7 @@
 from tornado.httpserver import HTTPServer
 from tornado import web, ioloop
 from tornado.log import app_log
-from .proxyhandlers import _make_serverproxy_handler
+from .proxyhandlers import _make_serverproxy_handler, AddSlashHandler
 import click
 import re
 import os
@@ -15,17 +15,23 @@ def make_app(destport, prefix, command):
 
     return web.Application([
         (
+            r"^"+re.escape(prefix)+r"$",
+            AddSlashHandler
+        ),
+        (
             url_path_join(prefix, 'oauth_callback'),
             HubOAuthCallbackHandler,
         ),
         (
-            r"^"+re.escape(prefix)+r"(.*)",
+            r"^"+re.escape(prefix)+r"/(.*)",
             proxy_handler,
             dict(state={})
         )
     ],
     debug=True,
-    cookie_secret=os.urandom(32)
+    cookie_secret=os.urandom(32),
+    user=os.environ.get('JUPYTERHUB_USER') or '',
+    group=os.environ.get('JUPYTERHUB_GROUP') or ''
     )
 
 
@@ -42,6 +48,9 @@ def run(port, destport, ip, debug, command):
         app_log.setLevel(logging.DEBUG)
 
     prefix = os.environ.get('JUPYTERHUB_SERVICE_PREFIX', '/')
+
+    if len(prefix) > 0 and prefix[-1] == '/':
+        prefix = prefix[:-1]
 
     app = make_app(destport, prefix, list(command))
 

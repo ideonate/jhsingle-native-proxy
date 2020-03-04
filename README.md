@@ -58,6 +58,31 @@ command being run.
 jhsingle-native-proxy --port 8000 --destport 8505 streamlit hello {--}server.port {port} {--}server.headless True {--}server.enableCORS False --ip 0.0.0.0 
 ```
 
+## Authentication
+
+The above examples all assume OAuth will be enforced, as per the JUPYTERHUB_* env vars.
+
+Alternatives can be specified via the authtype flag:
+
+Same as default:
+
+```
+jhsingle-native-proxy --authtype=oauth streamlit hello
+```
+
+No auth required at all:
+
+```
+jhsingle-native-proxy --authtype=none streamlit hello
+```
+
+**Proposed for the future** : require a URL query token called 'token' to be supplied and equal to that given in the --authtoken argument.
+
+```
+jhsingle-native-proxy --authtype=querytoken --authtoken=mysecrettoken streamlit hello
+```
+
+
 ## Development install
 
 ```

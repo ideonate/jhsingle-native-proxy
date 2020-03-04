@@ -24,7 +24,7 @@ def patch_default_headers():
     RequestHandler.set_default_headers = set_jupyterhub_header
 
 
-def make_app(destport, prefix, command):
+def make_app(destport, prefix, command, authtype):
 
     patch_default_headers()
 
@@ -42,7 +42,7 @@ def make_app(destport, prefix, command):
         (
             r"^"+re.escape(prefix)+r"/(.*)",
             proxy_handler,
-            dict(state={})
+            dict(state={}, authtype=authtype)
         )
     ],
     debug=True,
@@ -57,8 +57,9 @@ def make_app(destport, prefix, command):
 @click.option('--destport', default=8500, help='port that the webapp should end up running on')
 @click.option('--ip', default=None, help='Address to listen on')
 @click.option('--debug/--no-debug', default=False, help='To display debug level logs')
+@click.option('--authtype', type=click.Choice(['oauth', 'none'], case_sensitive=True), default='oauth')
 @click.argument('command', nargs=-1, required=True)
-def run(port, destport, ip, debug, command):
+def run(port, destport, ip, debug, authtype, command):
 
     if debug:
         print('Setting debug')
@@ -69,7 +70,7 @@ def run(port, destport, ip, debug, command):
     if len(prefix) > 0 and prefix[-1] == '/':
         prefix = prefix[:-1]
 
-    app = make_app(destport, prefix, list(command))
+    app = make_app(destport, prefix, list(command), authtype)
 
     http_server = HTTPServer(app)
 
@@ -77,6 +78,7 @@ def run(port, destport, ip, debug, command):
 
     print("Starting jhsingle-native-proxy server on address {} port {}, proxying to port {}".format(ip, port, destport))
     print("URL Prefix: {}".format(prefix))
+    print("Auth Type: {}".format(authtype))
     print("Command: {}".format(command))
     ioloop.IOLoop.current().start()
 

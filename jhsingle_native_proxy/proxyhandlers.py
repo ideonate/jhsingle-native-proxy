@@ -166,7 +166,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         else:
             return host in self.host_whitelist
 
-    @web.authenticated
+    #@web.authenticated - handled in subclass
     async def proxy(self, host, port, proxied_path):
         '''
         This serverextension handles:
@@ -385,12 +385,15 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
     def __init__(self, *args, **kwargs):
         self.requested_port = 0
         self.mappath = {}
+
         super().__init__(*args, **kwargs)
 
-    def initialize(self, state, *args, **kwargs):
+    def initialize(self, state, authtype, *args, **kwargs):
         self.state = state
         if 'proc_lock' not in state:
             state['proc_lock'] = Lock()
+
+        self.authtype = authtype
 
         super().initialize(*args, **kwargs)
 
@@ -479,7 +482,10 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
                     raise
 
     @web.authenticated
-    async def proxy(self, port, path):
+    async def oauth_proxy(self, port, path):
+        return await self.core_proxy(port, path)
+
+    async def core_proxy(self, port, path):
         if not path.startswith('/'):
             path = '/' + path
 
@@ -496,6 +502,12 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         self.log.debug('In proxy ensured process')
 
         return await super().proxy(self.port, path)
+
+    async def proxy(self, port, path):
+        if self.authtype == 'oauth':
+            return await self.oauth_proxy(port, path)
+        else:
+            return await self.core_proxy(port, path)
 
     async def http_get(self, path):
         self.log.info('SuperviseAndProxyHandler http_get {} {}'.format(self.port, path))

@@ -1,19 +1,36 @@
 from tornado.httpserver import HTTPServer
-from tornado import web, ioloop
+from tornado import ioloop
+from tornado.web import Application, RequestHandler
 from tornado.log import app_log
 from .proxyhandlers import _make_serverproxy_handler, AddSlashHandler
 import click
 import re
 import os
 import logging
-from jupyterhub.services.auth import HubOAuthCallbackHandler, HubOAuth
+from jupyterhub.services.auth import HubOAuthCallbackHandler
+from jupyterhub import __version__ as __jh_version__
 from .util import url_path_join
+
+
+def patch_default_headers():
+    if hasattr(RequestHandler, '_orig_set_default_headers'):
+        return
+    RequestHandler._orig_set_default_headers = RequestHandler.set_default_headers
+
+    def set_jupyterhub_header(self):
+        self._orig_set_default_headers()
+        self.set_header('X-JupyterHub-Version', __jh_version__)
+
+    RequestHandler.set_default_headers = set_jupyterhub_header
+
 
 def make_app(destport, prefix, command):
 
+    patch_default_headers()
+
     proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 10, False, destport, {})
 
-    return web.Application([
+    return Application([
         (
             r"^"+re.escape(prefix)+r"$",
             AddSlashHandler

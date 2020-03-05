@@ -48,7 +48,8 @@ def make_app(destport, prefix, command, authtype):
     debug=True,
     cookie_secret=os.urandom(32),
     user=os.environ.get('JUPYTERHUB_USER') or '',
-    group=os.environ.get('JUPYTERHUB_GROUP') or ''
+    group=os.environ.get('JUPYTERHUB_GROUP') or '',
+    base_url=prefix
     )
 
 

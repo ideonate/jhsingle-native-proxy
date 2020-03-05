@@ -559,7 +559,7 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
             }
         @property
         def base_url(self):
-            return '/' #self.settings.get('base_url', '/')
+            return self.settings.get('base_url', '/')
 
         @property
         def hub_users(self):

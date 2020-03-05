@@ -58,6 +58,14 @@ command being run.
 jhsingle-native-proxy --port 8000 --destport 8505 streamlit hello {--}server.port {port} {--}server.headless True {--}server.enableCORS False --ip 0.0.0.0 
 ```
 
+### Voila example:
+
+Running voila at the subfolder URL e.g. /user/dan/:
+
+```
+python -m jhsingle_native_proxy.main --destport 8505 voila ./Presentation.ipynb {--}port={port} {--}no-browser {--}Voila.server_url=/ {--}Voila.base_url={base_url}/ {--}debug
+```
+
 ## Authentication
 
 The above examples all assume OAuth will be enforced, as per the JUPYTERHUB_* env vars.

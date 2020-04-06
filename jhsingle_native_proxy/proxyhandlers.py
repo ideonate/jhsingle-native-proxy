@@ -571,6 +571,12 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
                 return {self.settings['group']}
             return set()
 
+        @property
+        def allow_all(self):
+            if self.settings['anyone']:
+                return self.settings['anyone'] == '1'
+            return super().allow_all
+
         def _render_template(self, value):
             args = self.process_args
             if type(value) is str:

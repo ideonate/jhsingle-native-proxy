@@ -24,7 +24,7 @@ def patch_default_headers():
     RequestHandler.set_default_headers = set_jupyterhub_header
 
 
-def make_app(destport, prefix, command, authtype):
+def make_app(destport, prefix, command, authtype, debug):
 
     patch_default_headers()
 
@@ -45,10 +45,11 @@ def make_app(destport, prefix, command, authtype):
             dict(state={}, authtype=authtype)
         )
     ],
-    debug=True,
+    debug=debug,
     cookie_secret=os.urandom(32),
     user=os.environ.get('JUPYTERHUB_USER') or '',
     group=os.environ.get('JUPYTERHUB_GROUP') or '',
+    anyone=os.environ.get('JUPYTERHUB_ANYONE') or '',
     base_url=prefix
     )
 
@@ -71,7 +72,7 @@ def run(port, destport, ip, debug, authtype, command):
     if len(prefix) > 0 and prefix[-1] == '/':
         prefix = prefix[:-1]
 
-    app = make_app(destport, prefix, list(command), authtype)
+    app = make_app(destport, prefix, list(command), authtype, debug)
 
     http_server = HTTPServer(app)
 

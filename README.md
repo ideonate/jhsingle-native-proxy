@@ -84,11 +84,11 @@ No auth required at all:
 jhsingle-native-proxy --authtype=none streamlit hello
 ```
 
-**Proposed for the future** : require a URL query token called 'token' to be supplied and equal to that given in the --authtoken argument.
+### Specifying Authorized Users
 
-```
-jhsingle-native-proxy --authtype=querytoken --authtoken=mysecrettoken streamlit hello
-```
+The env vars JUPYTERHUB_USER and JUPYTERHUB_GROUP can be used, as typical for any JupyterHub single server, to specify user/groups of 
+JupyterHub that should be allowed access via OAuth. There is an additional bespoke env var called JUPYTERHUB_ANYONE which can be set to 1 
+to allow any authenticated user access. (i.e. anyone who has an account on the JupyterHub)
 
 
 ## Development install

@@ -15,3 +15,4 @@ EXPOSE 8888
 COPY Presentation.ipynb $HOME
 
 CMD ["jhsingle-native-proxy", "--destport", "8505", "voila", "/home/jovyan/Presentation.ipynb", "{--}port={port}", "{--}no-browser", "{--}Voila.base_url={base_url}/", "{--}Voila.server_url=/"]
+

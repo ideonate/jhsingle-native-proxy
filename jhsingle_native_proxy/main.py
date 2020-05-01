@@ -56,7 +56,7 @@ def make_app(destport, prefix, command, authtype, debug):
 
 @click.command()
 @click.option('--port', default=8888, help='port for the proxy server to listen on')
-@click.option('--destport', default=8500, help='port that the webapp should end up running on')
+@click.option('--destport', default=8500, help='port that the webapp should end up running on; specify 0 to be assigned a random free port')
 @click.option('--ip', default=None, help='Address to listen on')
 @click.option('--debug/--no-debug', default=False, help='To display debug level logs')
 @click.option('--authtype', type=click.Choice(['oauth', 'none'], case_sensitive=True), default='oauth')

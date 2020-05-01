@@ -63,8 +63,10 @@ jhsingle-native-proxy --port 8000 --destport 8505 streamlit hello {--}server.por
 Running voila at the subfolder URL e.g. /user/dan/:
 
 ```
-python -m jhsingle_native_proxy.main --destport 8505 voila ./Presentation.ipynb {--}port={port} {--}no-browser {--}Voila.server_url=/ {--}Voila.base_url={base_url}/ {--}debug
+python -m jhsingle_native_proxy.main --destport 0 voila ./Presentation.ipynb {--}port={port} {--}no-browser {--}Voila.server_url=/ {--}Voila.base_url={base_url}/ {--}debug
 ```
+
+'destport 0' above instructs jhsingle-native-proxy to choose a random free port on which to run the sub-process (Voila), and of course substitutes that as {port} in the Voila command line so it knows which port to listen on.
 
 ## Authentication
 

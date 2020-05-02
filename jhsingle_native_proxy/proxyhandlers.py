@@ -573,9 +573,9 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
 
         @property
         def allow_all(self):
-            if self.settings['anyone']:
+            if 'anyone' in self.settings:
                 return self.settings['anyone'] == '1'
-            return super().allow_all.fget(self)
+            return super().allow_all
 
         def _render_template(self, value):
             args = self.process_args

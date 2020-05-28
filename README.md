@@ -58,6 +58,8 @@ command being run.
 jhsingle-native-proxy --port 8000 --destport 8505 streamlit hello {--}server.port {port} {--}server.headless True {--}server.enableCORS False --ip 0.0.0.0 
 ```
 
+Similarly, use e.g. {-}m to represent -m in the final command.
+
 ### Voila example:
 
 Running voila at the subfolder URL e.g. /user/dan/:

@@ -95,6 +95,12 @@ JupyterHub that should be allowed access via OAuth. There is an additional bespo
 to allow any authenticated user access. (i.e. anyone who has an account on the JupyterHub)
 
 
+## Changelog
+
+### v0.1.2 released 29 May 2020
+
+- Now allows single-dash placeholder, e.g. {-}m translates to -m in the final subprocess command.
+
 ## Development install
 
 ```

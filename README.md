@@ -94,8 +94,15 @@ The env vars JUPYTERHUB_USER and JUPYTERHUB_GROUP can be used, as typical for an
 JupyterHub that should be allowed access via OAuth. There is an additional bespoke env var called JUPYTERHUB_ANYONE which can be set to 1 
 to allow any authenticated user access. (i.e. anyone who has an account on the JupyterHub)
 
+### Extra Arguments
+
+--request-timeout=300 specifies the timeout in seconds that it waits for the underlying subprocess to return. Default is 300.
 
 ## Changelog
+
+### v0.1.3 released 1 June 2020
+
+- request-timeout added to the proxy call, and the default set to 300 (20 seconds was the httpclient's default previously)
 
 ### v0.1.2 released 29 May 2020
 

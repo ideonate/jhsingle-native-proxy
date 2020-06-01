@@ -6,7 +6,9 @@ Within JupyterHub this allows similar operation to [jupyter-server-proxy](https:
 
 OAuth authentication is enforced based on JUPYTERHUB_* environment variables.
 
-This is a very basic alpha version.
+This project is used in [ContainDS Dashboards](https://github.com/ideonate/cdsdashboards), which is a user-friendly 
+way to launch Jupyter notebooks as shareable dashboards inside JupyterHub. Also works with Streamlit and other 
+visualization frameworks.
 
 ## Install and Run
 

@@ -55,7 +55,7 @@ def make_app(destport, prefix, command, authtype, request_timeout, debug):
     )
 
 
-@click.command(context_settings={'ignore_unknown_options': True})
+@click.command()
 @click.option('--port', default=8888, help='port for the proxy server to listen on')
 @click.option('--destport', default=8500, help='port that the webapp should end up running on; specify 0 to be assigned a random free port')
 @click.option('--ip', default=None, help='Address to listen on')

@@ -24,7 +24,7 @@ def patch_default_headers():
     RequestHandler.set_default_headers = set_jupyterhub_header
 
 
-def make_app(destport, prefix, command, authtype, debug):
+def make_app(destport, prefix, command, authtype, request_timeout, debug):
 
     patch_default_headers()
 
@@ -50,18 +50,20 @@ def make_app(destport, prefix, command, authtype, debug):
     user=os.environ.get('JUPYTERHUB_USER') or '',
     group=os.environ.get('JUPYTERHUB_GROUP') or '',
     anyone=os.environ.get('JUPYTERHUB_ANYONE') or '',
-    base_url=prefix
+    base_url=prefix,
+    request_timeout=request_timeout
     )
 
 
-@click.command()
+@click.command(context_settings={'ignore_unknown_options': True})
 @click.option('--port', default=8888, help='port for the proxy server to listen on')
 @click.option('--destport', default=8500, help='port that the webapp should end up running on; specify 0 to be assigned a random free port')
 @click.option('--ip', default=None, help='Address to listen on')
 @click.option('--debug/--no-debug', default=False, help='To display debug level logs')
 @click.option('--authtype', type=click.Choice(['oauth', 'none'], case_sensitive=True), default='oauth')
+@click.option('--request-timeout', default=300, type=click.INT, help='timeout of proxy http calls to subprocess in seconds (default 300)')
 @click.argument('command', nargs=-1, required=True)
-def run(port, destport, ip, debug, authtype, command):
+def run(port, destport, ip, debug, authtype, request_timeout, command):
 
     if debug:
         print('Setting debug')
@@ -72,7 +74,7 @@ def run(port, destport, ip, debug, authtype, command):
     if len(prefix) > 0 and prefix[-1] == '/':
         prefix = prefix[:-1]
 
-    app = make_app(destport, prefix, list(command), authtype, debug)
+    app = make_app(destport, prefix, list(command), authtype, request_timeout, debug)
 
     http_server = HTTPServer(app)
 

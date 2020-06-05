@@ -507,6 +507,9 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
                     if not is_ready:
 
+                        #if proc._restart_process_future:
+                        #    proc._restart_process_future.cancel()
+
                         self.stderr_str = None
                         self.stdout_str = None
 
@@ -520,7 +523,8 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
                         await proc.kill()
 
-                        return False #raise web.HTTPError(500, 'could not start {} in time'.format(self.name))
+                        del self.state['proc']
+                        return False
                 except:
                     # Make sure we remove proc from state in any error condition
                     del self.state['proc']
@@ -543,6 +547,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
         if not await self.ensure_process():
             html = self.error_template.format(cmd=" ".join(self.get_cmd()), stderr=self.stderr_str, stdout=self.stdout_str)
+            self.set_status(500)
             return self.write(html)
 
         return await super().proxy(self.port, path)

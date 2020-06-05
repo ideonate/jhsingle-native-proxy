@@ -517,9 +517,11 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
                         if stderr:
                             self.stderr_str = str(stderr.decode("utf-8"))
+                            self.log.info('Process {} failed with stderr: {}'.format(self.name, self.stderr_str))
 
                         if stdout:
                             self.stdout_str = str(stdout.decode("utf-8"))
+                            self.log.info('Process {} failed with stdout: {}'.format(self.name, self.stdout_str))
 
                         await proc.kill()
 

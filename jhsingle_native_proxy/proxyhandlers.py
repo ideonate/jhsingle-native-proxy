@@ -516,10 +516,10 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
                         stderr, stdout = await proc.proc.communicate()
 
                         if stderr:
-                            self.stderr_str = stderr.decode("utf-8")
+                            self.stderr_str = str(stderr.decode("utf-8"))
 
                         if stdout:
-                            self.stdout_str = stdout.decode("utf-8")
+                            self.stdout_str = str(stdout.decode("utf-8"))
 
                         await proc.kill()
 
@@ -546,7 +546,12 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
                 path = self.mappath.get(path, path)
 
         if not await self.ensure_process():
-            html = self.error_template.format(cmd=" ".join(self.get_cmd()), stderr=self.stderr_str, stdout=self.stdout_str)
+            from tornado.escape import xhtml_escape
+            html = self.error_template.format(
+                cmd=xhtml_escape(" ".join(self.get_cmd())),
+                stderr=xhtml_escape(self.stderr_str or 'None'),
+                stdout=xhtml_escape(self.stdout_str or 'None')
+            )
             self.set_status(500)
             return self.write(html)
 

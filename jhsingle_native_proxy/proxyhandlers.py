@@ -2,6 +2,7 @@ from tornado import web, httpclient, ioloop, httputil
 import os
 import aiohttp
 import socket
+import subprocess
 from simpervisor import SupervisedProcess
 from datetime import datetime
 from asyncio import Lock
@@ -382,9 +383,39 @@ class RemoteProxyHandler(ProxyHandler):
 class SuperviseAndProxyHandler(LocalProxyHandler):
     '''Manage a given process and requests to it '''
 
+    error_template = """<!DOCTYPE html>
+<html>
+    <head>
+        <title>Error report from ContainDS Dashboards</title>
+    </head>
+    <body>
+
+<h2>Error report from ContainDS Dashboards</h2>
+
+    <h3>Command Running:</h2>
+    <pre>
+{cmd}
+    </pre>
+
+    <h3>Error output:</h3>
+    <pre>
+{stderr}
+    </pre>
+
+    <h3>Standard output:</h3>
+    <pre>
+{stdout}
+    </pre>
+    
+    </body>
+</html>"""
+
     def __init__(self, *args, **kwargs):
         self.requested_port = 0
         self.mappath = {}
+
+        self.stderr_str = None
+        self.stdout_str = None
 
         super().__init__(*args, **kwargs)
 
@@ -465,7 +496,8 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
                 self.log.info(cmd)
 
-                proc = SupervisedProcess(self.name, *cmd, env=server_env, ready_func=self._http_ready_func, ready_timeout=timeout, log=self.log)
+                proc = SupervisedProcess(self.name, *cmd, env=server_env, ready_func=self._http_ready_func, ready_timeout=timeout, log=self.log,
+                                            stderr=subprocess.PIPE, stdout=subprocess.PIPE)
                 self.state['proc'] = proc
 
                 try:
@@ -474,12 +506,26 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
                     is_ready = await proc.ready()
 
                     if not is_ready:
+
+                        self.stderr_str = None
+                        self.stdout_str = None
+
+                        stderr, stdout = await proc.proc.communicate()
+
+                        if stderr:
+                            self.stderr_str = stderr.decode("utf-8")
+
+                        if stdout:
+                            self.stdout_str = stdout.decode("utf-8")
+
                         await proc.kill()
-                        raise web.HTTPError(500, 'could not start {} in time'.format(self.name))
+
+                        return False #raise web.HTTPError(500, 'could not start {} in time'.format(self.name))
                 except:
                     # Make sure we remove proc from state in any error condition
                     del self.state['proc']
                     raise
+            return True
 
     @web.authenticated
     async def oauth_proxy(self, port, path):
@@ -495,11 +541,9 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
             else:
                 path = self.mappath.get(path, path)
 
-        self.log.debug('In proxy')
-
-        await self.ensure_process()
-
-        self.log.debug('In proxy ensured process')
+        if not await self.ensure_process():
+            html = self.error_template.format(cmd=" ".join(self.get_cmd()), stderr=self.stderr_str, stdout=self.stdout_str)
+            return self.write(html)
 
         return await super().proxy(self.port, path)
 
@@ -514,8 +558,9 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         return await self.proxy(self.port, path)
 
     async def open(self, path):
-        await self.ensure_process()
-        return await super().open(self.port, path)
+        if await self.ensure_process():
+            return await super().open(self.port, path)
+        raise web.HTTPError(500, 'could not start {} in time'.format(self.name))
 
     def post(self, path):
         return self.proxy(self.port, path)

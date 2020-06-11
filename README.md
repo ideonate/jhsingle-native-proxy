@@ -100,7 +100,14 @@ to allow any authenticated user access. (i.e. anyone who has an account on the J
 
 --request-timeout=300 specifies the timeout in seconds that it waits for the underlying subprocess to return. Default is 300.
 
+{origin_host} in the command argument will be replaced with the first 'host' seen in any request to the jhsingle-native-proxy server.
+
 ## Changelog
+
+### v0.2.0 released 11 June 2020
+
+- Better websocket handling (subprotocols)
+- {origin_host} variable added
 
 ### v0.1.3 released 1 June 2020
 

@@ -10,7 +10,7 @@ from .util import url_path_join
 from .websocket import WebSocketHandlerMixin, pingable_ws_connect
 from tornado.log import app_log
 from jupyterhub.services.auth import HubOAuthenticated
-from urllib.parse import urlunparse, urlparse
+from urllib.parse import urlunparse, urlparse, quote
 
 
 class AddSlashHandler(web.RequestHandler):
@@ -36,6 +36,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         self.proxy_base = ''
         self.absolute_url = kwargs.pop('absolute_url', False)
         self.host_whitelist = kwargs.pop('host_whitelist', ['localhost', '127.0.0.1'])
+        self.subprotocols = None
         super().__init__(*args, **kwargs)
 
     @property
@@ -133,6 +134,8 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         else:
             client_path = proxied_path
 
+        client_path = quote(client_path, safe=":/?#[]@!$&'()*+,;=-._~")
+
         client_uri = '{protocol}://{host}:{port}{path}'.format(
             protocol=protocol,
             host=host,
@@ -204,7 +207,17 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
 
         req = self._build_proxy_request(host, port, proxied_path, body)
 
-        response = await client.fetch(req, raise_error=False)
+        try:
+            response = await client.fetch(req, raise_error=False)
+        except httpclient.HTTPError as err:
+            if err.code == 599:
+                self._record_activity()
+                self.set_status(599)
+                self.write(str(err))
+                return
+            else:
+                raise
+
         # record activity at start and end of requests
         self._record_activity()
 
@@ -275,7 +288,8 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
             self._record_activity()
             request = httpclient.HTTPRequest(url=client_uri, headers=headers)
             self.ws = await pingable_ws_connect(request=request,
-                                                on_message_callback=message_cb, on_ping_callback=ping_cb)
+                                                on_message_callback=message_cb, on_ping_callback=ping_cb,
+                                                subprotocols=self.subprotocols)
             ws_connected.set_result(True)
             self._record_activity()
             self.log.info('Websocket connection established to {}'.format(client_uri))
@@ -306,6 +320,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
 
     def select_subprotocol(self, subprotocols):
         '''Select a single Sec-WebSocket-Protocol during handshake.'''
+        self.subprotocols = subprotocols
         if isinstance(subprotocols, list) and subprotocols:
             self.log.info('Client sent subprotocols: {}'.format(subprotocols))
             return subprotocols[0]
@@ -416,6 +431,8 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
         self.stderr_str = None
         self.stdout_str = None
+
+        self.origin_host = None
 
         super().__init__(*args, **kwargs)
 
@@ -538,6 +555,11 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         return await self.core_proxy(port, path)
 
     async def core_proxy(self, port, path):
+
+        if self.origin_host is None:
+            # Get origin from this request
+            self.store_origin_host()
+
         if not path.startswith('/'):
             path = '/' + path
 
@@ -570,6 +592,10 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         return await self.proxy(self.port, path)
 
     async def open(self, path):
+        if self.origin_host is None:
+            # Get origin from this request
+            self.store_origin_host()
+
         if await self.ensure_process():
             return await super().open(self.port, path)
         raise web.HTTPError(500, 'could not start {} in time'.format(self.name))
@@ -592,6 +618,10 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
     def options(self, path):
         return self.proxy(self.port, path)
 
+    def store_origin_host(self):
+        self.log.debug('Storing origin host {}'.format(self.request.host))
+        self.origin_host = self.request.host
+
 
 def _make_serverproxy_handler(name, command, environment, timeout, absolute_url, port, mappath):
     """
@@ -612,9 +642,11 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
             return {
                 'port': self.port,
                 'base_url': self.base_url,
+                'origin_host': self.origin_host,
                 '-': '-',
                 '--': '--'
             }
+
         @property
         def base_url(self):
             return self.settings.get('base_url', '/')

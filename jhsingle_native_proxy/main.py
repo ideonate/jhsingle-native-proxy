@@ -50,7 +50,7 @@ def make_app(destport, prefix, command, authtype, request_timeout, debug):
     user=os.environ.get('JUPYTERHUB_USER') or '',
     group=os.environ.get('JUPYTERHUB_GROUP') or '',
     anyone=os.environ.get('JUPYTERHUB_ANYONE') or '',
-    base_url=prefix,
+    base_url=prefix, # This is a confusing name, sorry
     request_timeout=request_timeout
     )
 

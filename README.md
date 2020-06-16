@@ -70,7 +70,13 @@ Running voila at the subfolder URL e.g. /user/dan/:
 python -m jhsingle_native_proxy.main --destport 0 voila ./Presentation.ipynb {--}port={port} {--}no-browser {--}Voila.server_url=/ {--}Voila.base_url={base_url}/ {--}debug
 ```
 
-'destport 0' above instructs jhsingle-native-proxy to choose a random free port on which to run the sub-process (Voila), and of course substitutes that as {port} in the Voila command line so it knows which port to listen on.
+'destport 0' above instructs jhsingle-native-proxy to choose a random free port on which to run the sub-process (Voila), and of course substitutes that as {port} in the Voila command line so it knows which port to listen on. destport 0 is the default anyway.
+
+Or specify presentation_path as a substitution instead of hard-coding, which is sometimes easier in your wrapper code:
+
+```
+python -m jhsingle_native_proxy.main --destport 0 voila {presentation_path} {--}port={port} {--}no-browser {--}Voila.server_url=/ {--}Voila.base_url={base_url}/ {--}debug --presentation_path=./Presentation.ipynb
+```
 
 ## Authentication
 

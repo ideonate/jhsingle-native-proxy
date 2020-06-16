@@ -28,7 +28,7 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
 
     patch_default_headers()
 
-    proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 10, False, destport, {})
+    proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 30, False, destport, {})
 
     return Application([
         (
@@ -58,7 +58,7 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
 
 @click.command()
 @click.option('--port', default=8888, help='port for the proxy server to listen on')
-@click.option('--destport', default=8500, help='port that the webapp should end up running on; specify 0 to be assigned a random free port')
+@click.option('--destport', default=0, help='port that the webapp should end up running on; default 0 to be assigned a random free port')
 @click.option('--ip', default=None, help='Address to listen on')
 @click.option('--presentation-path', default=None, help='presentation_path substitution variable')
 @click.option('--debug/--no-debug', default=False, help='To display debug level logs')

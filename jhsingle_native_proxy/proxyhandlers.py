@@ -643,6 +643,8 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
                 'port': self.port,
                 'base_url': self.base_url,
                 'presentation_path': self.presentation_path,
+                'presentation_basename': self.presentation_basename,
+                'presentation_dirname': self.presentation_dirname,
                 'origin_host': self.origin_host,
                 '-': '-',
                 '--': '--'
@@ -655,6 +657,14 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
         @property
         def presentation_path(self):
             return self.settings.get('presentation_path', '.')
+
+        @property
+        def presentation_basename(self):
+            return self.settings.get('presentation_basename', '')
+
+        @property
+        def presentation_dirname(self):
+            return self.settings.get('presentation_dirname', '.')
 
         @property
         def hub_users(self):

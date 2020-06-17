@@ -28,7 +28,7 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
 
     patch_default_headers()
 
-    proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 30, False, destport, {})
+    proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 10, False, destport, {})
 
     return Application([
         (
@@ -52,6 +52,8 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
     anyone=os.environ.get('JUPYTERHUB_ANYONE') or '',
     base_url=prefix, # This is a confusing name, sorry
     presentation_path=presentation_path,
+    presentation_basename=os.path.basename(presentation_path),
+    presentation_dirname=os.path.dirname(presentation_path),
     request_timeout=request_timeout
     )
 

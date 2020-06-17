@@ -78,6 +78,9 @@ Or specify presentation_path as a substitution instead of hard-coding, which is 
 python -m jhsingle_native_proxy.main --destport 0 voila {presentation_path} {--}port={port} {--}no-browser {--}Voila.server_url=/ {--}Voila.base_url={base_url}/ {--}debug --presentation_path=./Presentation.ipynb
 ```
 
+In addition, if presentation_path is provided, two further substitution variables are available: presentation_dirname and 
+presentation_basename. These are computed using Python's os.path.dirname and os.path.basename functions on presentation_path.
+
 ## Authentication
 
 The above examples all assume OAuth will be enforced, as per the JUPYTERHUB_* env vars.
@@ -109,6 +112,11 @@ to allow any authenticated user access. (i.e. anyone who has an account on the J
 {origin_host} in the command argument will be replaced with the first 'host' seen in any request to the jhsingle-native-proxy server.
 
 ## Changelog
+
+### v0.3.0 released 17 June 2020
+
+- presentation_path can be provided as a command line argument to become a substitution variable.
+- presentation_basename and presentation_dirname are also available when presentation_path is supplied.
 
 ### v0.2.0 released 11 June 2020
 

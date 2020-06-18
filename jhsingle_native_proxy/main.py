@@ -26,6 +26,13 @@ def patch_default_headers():
 
 def make_app(destport, prefix, command, presentation_path, authtype, request_timeout, debug):
 
+    presentation_basename = ''
+    presentation_dirname = ''
+
+    if presentation_path:
+        presentation_basename = os.path.basename(presentation_path)
+        presentation_dirname = os.path.dirname(presentation_path)
+
     patch_default_headers()
 
     proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 10, False, destport, {})
@@ -52,8 +59,8 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
     anyone=os.environ.get('JUPYTERHUB_ANYONE') or '',
     base_url=prefix, # This is a confusing name, sorry
     presentation_path=presentation_path,
-    presentation_basename=os.path.basename(presentation_path),
-    presentation_dirname=os.path.dirname(presentation_path),
+    presentation_basename=presentation_basename,
+    presentation_dirname=presentation_dirname,
     request_timeout=request_timeout
     )
 
@@ -62,7 +69,7 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
 @click.option('--port', default=8888, help='port for the proxy server to listen on')
 @click.option('--destport', default=0, help='port that the webapp should end up running on; default 0 to be assigned a random free port')
 @click.option('--ip', default=None, help='Address to listen on')
-@click.option('--presentation-path', default=None, help='presentation_path substitution variable')
+@click.option('--presentation-path', default='', help='presentation_path substitution variable')
 @click.option('--debug/--no-debug', default=False, help='To display debug level logs')
 @click.option('--authtype', type=click.Choice(['oauth', 'none'], case_sensitive=True), default='oauth')
 @click.option('--request-timeout', default=300, type=click.INT, help='timeout of proxy http calls to subprocess in seconds (default 300)')

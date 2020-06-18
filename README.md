@@ -113,6 +113,10 @@ to allow any authenticated user access. (i.e. anyone who has an account on the J
 
 ## Changelog
 
+### v0.3.1 released 18 June 2020
+
+- Defaults presentation_path to empty str ('') if not supplied, avoiding error
+
 ### v0.3.0 released 17 June 2020
 
 - presentation_path can be provided as a command line argument to become a substitution variable.

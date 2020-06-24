@@ -10,6 +10,7 @@ import logging
 from jupyterhub.services.auth import HubOAuthCallbackHandler
 from jupyterhub import __version__ as __jh_version__
 from .util import url_path_join
+from .activity import start_keep_alive, configure_http_client
 
 
 def patch_default_headers():
@@ -64,6 +65,8 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
     request_timeout=request_timeout
     )
 
+def send_activity():
+    pass
 
 @click.command()
 @click.option('--port', default=8888, help='port for the proxy server to listen on')
@@ -73,8 +76,10 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
 @click.option('--debug/--no-debug', default=False, help='To display debug level logs')
 @click.option('--authtype', type=click.Choice(['oauth', 'none'], case_sensitive=True), default='oauth')
 @click.option('--request-timeout', default=300, type=click.INT, help='timeout of proxy http calls to subprocess in seconds (default 300)')
+@click.option('--last-activity-interval', default=300, type=click.INT, help='frequency to notify hub that dashboard is still running in seconds (default 300), 0 for never')
+@click.option('--fake-activity/--no-fake-activity', default=True, help='Always report that there has been activity (force keep alive) - only happens if last-activity-interval > 0')
 @click.argument('command', nargs=-1, required=True)
-def run(port, destport, ip, presentation_path, debug, authtype, request_timeout, command):
+def run(port, destport, ip, presentation_path, debug, authtype, request_timeout, last_activity_interval, fake_activity, command):
 
     if debug:
         print('Setting debug')
@@ -84,6 +89,8 @@ def run(port, destport, ip, presentation_path, debug, authtype, request_timeout,
 
     if len(prefix) > 0 and prefix[-1] == '/':
         prefix = prefix[:-1]
+
+    configure_http_client()
 
     app = make_app(destport, prefix, list(command), presentation_path, authtype, request_timeout, debug)
 
@@ -95,6 +102,10 @@ def run(port, destport, ip, presentation_path, debug, authtype, request_timeout,
     print("URL Prefix: {}".format(prefix))
     print("Auth Type: {}".format(authtype))
     print("Command: {}".format(command))
+
+    if last_activity_interval > 0:
+        start_keep_alive(last_activity_interval, fake_activity, app.settings)
+
     ioloop.IOLoop.current().start()
 
 

@@ -1,5 +1,5 @@
 jupyterhub
-tornado>=5.0
+tornado>=5.1
 Click>=7.0
 aiohttp
 simpervisor

@@ -25,7 +25,7 @@ def patch_default_headers():
     RequestHandler.set_default_headers = set_jupyterhub_header
 
 
-def make_app(destport, prefix, command, presentation_path, authtype, request_timeout, debug):
+def make_app(destport, prefix, command, presentation_path, authtype, request_timeout, ready_check_path, debug):
 
     presentation_basename = ''
     presentation_dirname = ''
@@ -36,7 +36,7 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
 
     patch_default_headers()
 
-    proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 10, False, destport, {})
+    proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 10, False, destport, ready_check_path, {})
 
     return Application([
         (
@@ -77,9 +77,10 @@ def send_activity():
 @click.option('--authtype', type=click.Choice(['oauth', 'none'], case_sensitive=True), default='oauth')
 @click.option('--request-timeout', default=300, type=click.INT, help='timeout of proxy http calls to subprocess in seconds (default 300)')
 @click.option('--last-activity-interval', default=300, type=click.INT, help='frequency to notify hub that dashboard is still running in seconds (default 300), 0 for never')
-@click.option('--fake-activity/--no-fake-activity', default=True, help='Always report that there has been activity (force keep alive) - only happens if last-activity-interval > 0')
+@click.option('--force-alive/--no-force-alive', default=True, help='Always report that there has been activity (force keep alive) - only happens if last-activity-interval > 0')
+@click.option('--ready-check-path', default='/', help='URL path to poll for readiness (default /)')
 @click.argument('command', nargs=-1, required=True)
-def run(port, destport, ip, presentation_path, debug, authtype, request_timeout, last_activity_interval, fake_activity, command):
+def run(port, destport, ip, presentation_path, debug, authtype, request_timeout, last_activity_interval, force_alive, ready_check_path, command):
 
     if debug:
         print('Setting debug')
@@ -92,7 +93,7 @@ def run(port, destport, ip, presentation_path, debug, authtype, request_timeout,
 
     configure_http_client()
 
-    app = make_app(destport, prefix, list(command), presentation_path, authtype, request_timeout, debug)
+    app = make_app(destport, prefix, list(command), presentation_path, authtype, request_timeout, ready_check_path, debug)
 
     http_server = HTTPServer(app)
 
@@ -104,7 +105,7 @@ def run(port, destport, ip, presentation_path, debug, authtype, request_timeout,
     print("Command: {}".format(command))
 
     if last_activity_interval > 0:
-        start_keep_alive(last_activity_interval, fake_activity, app.settings)
+        start_keep_alive(last_activity_interval, force_alive, app.settings)
 
     ioloop.IOLoop.current().start()
 

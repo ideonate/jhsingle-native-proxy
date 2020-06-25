@@ -434,6 +434,8 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
         self.origin_host = None
 
+        self.ready_check_path = '/'
+
         super().__init__(*args, **kwargs)
 
     def initialize(self, state, authtype, *args, **kwargs):
@@ -479,7 +481,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         return 5
 
     async def _http_ready_func(self, p):
-        url = 'http://localhost:{}'.format(self.port)
+        url = 'http://localhost:{}{}'.format(self.port, self.ready_check_path)
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.get(url) as resp:
@@ -623,7 +625,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         self.origin_host = self.request.host
 
 
-def _make_serverproxy_handler(name, command, environment, timeout, absolute_url, port, mappath):
+def _make_serverproxy_handler(name, command, environment, timeout, absolute_url, port, ready_check_path, mappath):
     """
     Create a SuperviseAndProxyHandler subclass with given parameters
     """
@@ -636,6 +638,7 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
             self.absolute_url = absolute_url
             self.requested_port = port
             self.mappath = mappath
+            self.ready_check_path = ready_check_path
 
         @property
         def process_args(self):

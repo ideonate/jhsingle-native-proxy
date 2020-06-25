@@ -18,7 +18,7 @@ def configure_http_client():
     ssl_context = make_ssl_context(keyfile, certfile, cafile=client_ca)
     httpclient.AsyncHTTPClient.configure(None, defaults={"ssl_options": ssl_context})
 
-def start_keep_alive(last_activity_interval, fake_activity, settings):
+def start_keep_alive(last_activity_interval, force_alive, settings):
 
     client = httpclient.AsyncHTTPClient()
 
@@ -37,7 +37,7 @@ def start_keep_alive(last_activity_interval, fake_activity, settings):
 
             last_activity_timestamp = None
 
-            if fake_activity:
+            if force_alive:
                 last_activity_timestamp = datetime.utcnow()
             else:
                 last_activity_timestamp = settings.get('api_last_activity', None)

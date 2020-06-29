@@ -1,4 +1,4 @@
-jupyterhub
+jupyterhub>=1.0.0
 tornado>=5.1
 Click>=7.0
 aiohttp

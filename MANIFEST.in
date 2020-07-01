@@ -2,5 +2,6 @@
 # Misc
 include requirements.txt
 include LICENSE
+include LICENSE-jupyter-server-proxy
 include README.md
 global-exclude *.py[co]

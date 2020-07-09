@@ -571,6 +571,11 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
             else:
                 path = self.mappath.get(path, path)
 
+        if self.gitwrapper and not self.gitwrapper.finished:
+            self.set_status(200)
+            html = 'Git checkout still in progress'
+            return self.write(html)
+
         if not await self.ensure_process():
             from tornado.escape import xhtml_escape
             html = self.error_template.format(
@@ -597,6 +602,9 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         if self.origin_host is None:
             # Get origin from this request
             self.store_origin_host()
+        
+        if self.gitwrapper and not self.gitwrapper.finished:
+            raise web.HTTPError(500, 'Git checkout is not finished')
 
         if await self.ensure_process():
             return await super().open(self.port, path)
@@ -625,7 +633,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         self.origin_host = self.request.host
 
 
-def _make_serverproxy_handler(name, command, environment, timeout, absolute_url, port, ready_check_path, mappath):
+def _make_serverproxy_handler(name, command, environment, timeout, absolute_url, port, ready_check_path, gitwrapper, mappath):
     """
     Create a SuperviseAndProxyHandler subclass with given parameters
     """
@@ -639,6 +647,7 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
             self.requested_port = port
             self.mappath = mappath
             self.ready_check_path = ready_check_path
+            self.gitwrapper = gitwrapper
 
         @property
         def process_args(self):

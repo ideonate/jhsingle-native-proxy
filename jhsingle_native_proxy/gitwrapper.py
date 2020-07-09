@@ -19,6 +19,8 @@ class GitWrapper():
 
         print("Pulling from git repo")
 
+        # We don't need a lock on git puller since we only call it from this object.
+
         try:
 
             q = Queue()

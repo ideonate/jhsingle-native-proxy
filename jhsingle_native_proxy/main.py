@@ -29,7 +29,7 @@ def patch_default_headers():
     RequestHandler.set_default_headers = set_jupyterhub_header
 
 
-def make_app(destport, prefix, command, presentation_path, authtype, request_timeout, ready_check_path, repo, repofolder, debug):
+def make_app(destport, prefix, command, presentation_path, authtype, request_timeout, ready_check_path, repo, repobranch, repofolder, debug):
 
     presentation_basename = ''
     presentation_dirname = ''
@@ -42,7 +42,7 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
 
     gitwrapper = None
     if repo != '':
-        gitwrapper = GitWrapper(repo, repofolder)
+        gitwrapper = GitWrapper(repo, repobranch, repofolder)
         ensure_future(gitwrapper.start_pull())
 
     proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 10, False, destport, ready_check_path, gitwrapper, {})
@@ -89,9 +89,10 @@ def send_activity():
 @click.option('--force-alive/--no-force-alive', default=True, help='Always report that there has been activity (force keep alive) - only happens if last-activity-interval > 0')
 @click.option('--ready-check-path', default='/', help='URL path to poll for readiness (default /)')
 @click.option('--repo', default='', help="Git repo to pull before running webapp subprocess")
-@click.option('--repofolder', default='.', help="Relative folder to hold git repo contents")
+@click.option('--repobranch', default='master', help="Branch to checkout (if --repo provided)")
+@click.option('--repofolder', default='.', help="Relative folder to hold git repo contents (if --repo provided)")
 @click.argument('command', nargs=-1, required=True)
-def run(port, destport, ip, presentation_path, debug, authtype, request_timeout, last_activity_interval, force_alive, ready_check_path, repo, repofolder, command):
+def run(port, destport, ip, presentation_path, debug, authtype, request_timeout, last_activity_interval, force_alive, ready_check_path, repo, repobranch, repofolder, command):
 
     if debug:
         print('Setting debug')
@@ -104,7 +105,7 @@ def run(port, destport, ip, presentation_path, debug, authtype, request_timeout,
 
     configure_http_client()
 
-    app = make_app(destport, prefix, list(command), presentation_path, authtype, request_timeout, ready_check_path, repo, repofolder, debug)
+    app = make_app(destport, prefix, list(command), presentation_path, authtype, request_timeout, ready_check_path, repo, repobranch, repofolder, debug)
 
     http_server = HTTPServer(app)
 

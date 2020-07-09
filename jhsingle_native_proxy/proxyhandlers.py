@@ -425,6 +425,21 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
     </body>
 </html>"""
 
+    gitpulling_template = """<!DOCTYPE html>
+<html>
+    <head>
+        <title>Status page from ContainDS Dashboards</title>
+        <meta http-equiv="Refresh" content="2">
+    </head>
+    <body>
+
+    <h3>Pulling content from git</h2>
+
+    <p>Please wait.... refreshing page in 2 seconds</p>
+    
+    </body>
+</html>"""
+
     def __init__(self, *args, **kwargs):
         self.requested_port = 0
         self.mappath = {}
@@ -571,10 +586,19 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
             else:
                 path = self.mappath.get(path, path)
 
-        if self.gitwrapper and not self.gitwrapper.finished:
-            self.set_status(200)
-            html = 'Git checkout still in progress'
-            return self.write(html)
+        if self.gitwrapper:
+            if not self.gitwrapper.finished:
+                self.set_status(200)
+                return self.write(self.gitpulling_template)
+            elif self.gitwrapper.error:
+                from tornado.escape import xhtml_escape
+                html = self.error_template.format(
+                    cmd=xhtml_escape(" ".join(self.get_cmd())),
+                    stderr=xhtml_escape("\n".join(self.gitwrapper.logs)),
+                    stdout=''
+                )
+                self.set_status(500)
+                return self.write(html)
 
         if not await self.ensure_process():
             from tornado.escape import xhtml_escape

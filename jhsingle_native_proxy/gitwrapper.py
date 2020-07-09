@@ -8,29 +8,25 @@ from .pull import GitPuller
 
 class GitWrapper():
 
-    finished = False
-
-    def __init__(self, repo, repofolder):
+    def __init__(self, repo, repobranch, repofolder):
         self.repo = repo
         self.finished = False
+        self.error = False
         self.logs = []
-        self.pullfuture = None
-        self.gitpuller = GitPuller(repo, 'master', repofolder)
+        self.gitpuller = GitPuller(repo, repobranch, repofolder)
 
     async def start_pull(self):
 
-        print("In start_pull")
+        print("Pulling from git repo")
 
         try:
 
             q = Queue()
             def pull():
                 try:
-                    print("In start_pull.pull")
                     for line in self.gitpuller.pull():
                         q.put_nowait(line)
-                    # Sentinel when we're done
-                    q.put_nowait(None)
+                    q.put_nowait(None) # Signal we are done
                 except Exception as e:
                     q.put_nowait(e)
                     raise e
@@ -41,19 +37,21 @@ class GitWrapper():
             while True:
                 try:
                     progress = q.get_nowait()
-                    print(progress)
                 except Empty:
                     await sleep(0.5)
                     continue
                 if progress is None:
                     break
                 if isinstance(progress, Exception):
-                    error = '\n'.join([
+                    self.logs.extend([
                             l.strip()
                             for l in traceback.format_exception(
                                 type(progress), progress, progress.__traceback__
                             )
                         ])
+                    self.error = True
                     return
+                print(progress)
+                self.logs.append(progress)
         finally:
             self.finished = True

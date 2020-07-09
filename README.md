@@ -154,3 +154,7 @@ pip install -e .
 ```
 
 To run directly in python: `python -m jhsingle_native_proxy.main <rest of command line>`
+
+Testing git puller:
+
+python -m jhsingle_native_proxy.main --authtype=none --destport=0 --port=8888 voila ./sincosfolder/Presentation.ipynb {--}port={port} {--}no-browser {--}Voila.server_url=/ {--}Voila.base_url={base_url}/ --repo=https://github.com/danlester/binder-sincos --repofolder=sincosfolder

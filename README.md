@@ -117,8 +117,15 @@ the proxy (default 300). Specify 0 to never update.
 
 --ready-check-path (default /) to change the URL on the subprocess used to poll with an HTTP request to check for readiness.
 
+--repo - use git to check out a repo before running the sub process
+
+--repofolder - the path of a folder (to be created if necessary) to contain the git repo contents
 
 ## Changelog
+
+### v0.4.0 released 15 July 2020
+
+- repo and repofolder optional arguments added
 
 ### v0.3.2 released 25 June 2020
 

@@ -5,7 +5,7 @@ import socket
 import subprocess
 from simpervisor import SupervisedProcess
 from datetime import datetime
-from asyncio import Lock
+from asyncio import Lock, ensure_future
 from .util import url_path_join
 from .websocket import WebSocketHandlerMixin, pingable_ws_connect
 from tornado.log import app_log
@@ -541,9 +541,6 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
                     if not is_ready:
 
-                        #if proc._restart_process_future:
-                        #    proc._restart_process_future.cancel()
-
                         self.stderr_str = None
                         self.stdout_str = None
 
@@ -561,6 +558,24 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
                         del self.state['proc']
                         return False
+
+                    else:
+                        # Make sure we empty the buffers periodically
+
+                        async def pipe_output(proc, pipename, log):
+                            while True:
+                                if proc.proc:
+                                    stream = getattr(proc.proc, pipename, None)
+                                    if stream:
+                                        line = await stream.readline()
+                                        if line:
+                                            log.info(line)
+                                        else:
+                                            break
+
+                        ensure_future(pipe_output(proc, 'stderr', self.log))
+                        ensure_future(pipe_output(proc, 'stdout', self.log))
+
                 except:
                     # Make sure we remove proc from state in any error condition
                     del self.state['proc']

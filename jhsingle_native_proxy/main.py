@@ -29,7 +29,7 @@ def patch_default_headers():
     RequestHandler.set_default_headers = set_jupyterhub_header
 
 
-def make_app(destport, prefix, command, presentation_path, authtype, request_timeout, ready_check_path, repo, repobranch, repofolder, debug):
+def make_app(destport, prefix, command, presentation_path, authtype, request_timeout, ready_check_path, repo, repobranch, repofolder, conda_env_name, debug):
 
     presentation_basename = ''
     presentation_dirname = ''
@@ -44,6 +44,9 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
     if repo != '':
         gitwrapper = GitWrapper(repo, repobranch, repofolder)
         ensure_future(gitwrapper.start_pull())
+
+    if conda_env_name != '':
+        command = ['python3', '-m', 'jhsingle_native_proxy.conda_runner', conda_env_name] + command
 
     proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 10, False, destport, ready_check_path, gitwrapper, {})
 
@@ -91,8 +94,10 @@ def send_activity():
 @click.option('--repo', default='', help="Git repo to pull before running webapp subprocess")
 @click.option('--repobranch', default='master', help="Branch to checkout (if --repo provided)")
 @click.option('--repofolder', default='.', help="Relative folder to hold git repo contents (if --repo provided)")
+@click.option('--conda-env', default='', help="Name of conda env to activate before running process")
 @click.argument('command', nargs=-1, required=True)
-def run(port, destport, ip, presentation_path, debug, authtype, request_timeout, last_activity_interval, force_alive, ready_check_path, repo, repobranch, repofolder, command):
+def run(port, destport, ip, presentation_path, debug, authtype, request_timeout, last_activity_interval, force_alive, ready_check_path, 
+        repo, repobranch, repofolder, conda_env, command):
 
     if debug:
         print('Setting debug')
@@ -105,7 +110,7 @@ def run(port, destport, ip, presentation_path, debug, authtype, request_timeout,
 
     configure_http_client()
 
-    app = make_app(destport, prefix, list(command), presentation_path, authtype, request_timeout, ready_check_path, repo, repobranch, repofolder, debug)
+    app = make_app(destport, prefix, list(command), presentation_path, authtype, request_timeout, ready_check_path, repo, repobranch, repofolder, conda_env, debug)
 
     http_server = HTTPServer(app)
 

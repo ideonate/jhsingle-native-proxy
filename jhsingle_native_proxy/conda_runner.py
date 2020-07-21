@@ -34,7 +34,7 @@ def exec_in_env(envname, *command):
     conda_prefix = conda_info['conda_prefix']
     all_envs = conda_info['envs']
 
-    env_path = '' #os.path.join(conda_prefix, 'envs', envname) # Guess at a default
+    env_path = os.path.join(conda_prefix, 'envs', envname) # Guess at a default
 
     for env in all_envs:
         last_name = env.split('/')[-1]

@@ -46,7 +46,11 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
         ensure_future(gitwrapper.start_pull())
 
     if conda_env_name != '':
-        command = ['python3', '-m', 'jhsingle_native_proxy.conda_runner', conda_env_name] + command
+        from .conda_runner import get_conda_prefix_and_env
+
+        conda_prefix, env_path = get_conda_prefix_and_env(conda_env_name)
+        
+        command = ['python3', '-m', 'jhsingle_native_proxy.conda_runner', conda_prefix, env_path] + command
 
     proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 10, False, destport, ready_check_path, gitwrapper, {})
 

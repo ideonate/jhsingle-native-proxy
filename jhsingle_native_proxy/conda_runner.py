@@ -9,13 +9,7 @@ try:
 except ImportError:
     from pipes import quote
 
-def exec_in_env(envname, *command):
-    # Run the standard conda activation script, and print the
-    # resulting environment variables to stdout for reading.
-
-    # Get these from conda info --json
-    conda_prefix = '/Users/dan/opt/miniconda3'
-    
+def get_conda_info():
     conda_info = None
 
     try:
@@ -28,7 +22,14 @@ def exec_in_env(envname, *command):
         conda_info = json.loads(p)
     except Exception as err:
         print("jhsingle_native_proxy.conda_runner couldn't call conda:\n%s", err)
-        sys.exit(1)
+        return None
+
+    return conda_info
+
+def get_conda_prefix_and_env(envname, conda_info=None):
+
+    if conda_info is None:
+        conda_info = get_conda_info()
 
     # Find conda env
     conda_prefix = conda_info['conda_prefix']
@@ -42,6 +43,11 @@ def exec_in_env(envname, *command):
             env_path = env
             break
 
+    return conda_prefix, env_path
+
+def exec_in_env(conda_prefix, env_path, *command):
+    # Run the standard conda activation script, and print the
+    # resulting environment variables to stdout for reading.
 
     # Build final command
     command = ' '.join(quote(c) for c in command)

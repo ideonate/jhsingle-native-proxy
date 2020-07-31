@@ -81,9 +81,6 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
     request_timeout=request_timeout
     )
 
-def send_activity():
-    pass
-
 @click.command()
 @click.option('--port', default=8888, help='port for the proxy server to listen on')
 @click.option('--destport', default=0, help='port that the webapp should end up running on; default 0 to be assigned a random free port')
@@ -99,9 +96,10 @@ def send_activity():
 @click.option('--repobranch', default='master', help="Branch to checkout (if --repo provided)")
 @click.option('--repofolder', default='.', help="Relative folder to hold git repo contents (if --repo provided)")
 @click.option('--conda-env', default='', help="Name of conda env to activate before running process")
+@click.option('--allow-root/--no-allow-root', default=True, help='Currently ignored - present to avoid error if this flag is usually passed to singleuser notebook')
 @click.argument('command', nargs=-1, required=True)
 def run(port, destport, ip, presentation_path, debug, authtype, request_timeout, last_activity_interval, force_alive, ready_check_path, 
-        repo, repobranch, repofolder, conda_env, command):
+        repo, repobranch, repofolder, conda_env, allow_root, command):
 
     if debug:
         print('Setting debug')

@@ -81,6 +81,39 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
     request_timeout=request_timeout
     )
 
+def get_ssl_options():
+    ssl_options = {}
+    keyfile = os.environ.get('JUPYTERHUB_SSL_KEYFILE') or ''
+    certfile = os.environ.get('JUPYTERHUB_SSL_CERTFILE') or ''
+    client_ca = os.environ.get('JUPYTERHUB_SSL_CLIENT_CA') or ''
+
+    if keyfile:
+        ssl_options['keyfile'] = keyfile
+
+    if certfile:
+        ssl_options['certfile'] = certfile
+
+    if client_ca:
+        ssl_options['ca_certs'] = client_ca
+
+    if not ssl_options:
+        # None indicates no SSL config
+        ssl_options = None
+    else:
+        # SSL may be missing, so only import it if it's to be used
+        import ssl
+        # PROTOCOL_TLS selects the highest ssl/tls protocol version that both the client and
+        # server support. When PROTOCOL_TLS is not available use PROTOCOL_SSLv23.
+        # PROTOCOL_TLS is new in version 2.7.13, 3.5.3 and 3.6
+        ssl_options.setdefault(
+            'ssl_version',
+            getattr(ssl, 'PROTOCOL_TLS', ssl.PROTOCOL_SSLv23)
+        )
+        if ssl_options.get('ca_certs', False):
+            ssl_options.setdefault('cert_reqs', ssl.CERT_REQUIRED)
+
+    return ssl_options
+
 @click.command()
 @click.option('--port', default=8888, help='port for the proxy server to listen on')
 @click.option('--destport', default=0, help='port that the webapp should end up running on; default 0 to be assigned a random free port')
@@ -114,7 +147,9 @@ def run(port, destport, ip, presentation_path, debug, authtype, request_timeout,
 
     app = make_app(destport, prefix, list(command), presentation_path, authtype, request_timeout, ready_check_path, repo, repobranch, repofolder, conda_env, debug)
 
-    http_server = HTTPServer(app)
+    ssl_options = get_ssl_options()
+
+    http_server = HTTPServer(app, ssl_options=ssl_options, xheaders=True)
 
     http_server.listen(port, ip)
 

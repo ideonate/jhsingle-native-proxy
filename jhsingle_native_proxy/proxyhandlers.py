@@ -8,10 +8,12 @@ from datetime import datetime
 from asyncio import Lock, ensure_future
 from .util import url_path_join
 from .websocket import WebSocketHandlerMixin, pingable_ws_connect
-from tornado.log import app_log
+from tornado.log import app_log, gen_log
 from jupyterhub.services.auth import HubOAuthenticated
 from urllib.parse import urlunparse, urlparse, quote
-
+from typing import (
+    Any
+)
 
 class AddSlashHandler(web.RequestHandler):
     """Add trailing slash to URLs that need them."""
@@ -240,7 +242,84 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
             if response.body:
                 self.write(response.body)
 
+    async def ws_get(self, *args: Any, **kwargs: Any) -> None:
+        self.open_args = args
+        self.open_kwargs = kwargs
+
+        # Upgrade header should be present and should be equal to WebSocket
+        if self.request.headers.get("Upgrade", "").lower() != "websocket":
+            self.set_status(400)
+            log_msg = 'Can "Upgrade" only to "WebSocket".'
+            self.finish(log_msg)
+            gen_log.debug(log_msg)
+            return
+
+        # Connection header should be upgrade.
+        # Some proxy servers/load balancers
+        # might mess with it.
+        headers = self.request.headers
+        connection = map(
+            lambda s: s.strip().lower(), headers.get("Connection", "").split(",")
+        )
+        if "upgrade" not in connection:
+            self.set_status(400)
+            log_msg = '"Connection" must be "Upgrade".'
+            self.finish(log_msg)
+            gen_log.debug(log_msg)
+            return
+
+        # Handle WebSocket Origin naming convention differences
+        # The difference between version 8 and 13 is that in 8 the
+        # client sends a "Sec-Websocket-Origin" header and in 13 it's
+        # simply "Origin".
+        if "Origin" in self.request.headers:
+            origin = self.request.headers.get("Origin")
+        else:
+            origin = self.request.headers.get("Sec-Websocket-Origin", None)
+
+        # If there was an origin header, check to make sure it matches
+        # according to check_origin. When the origin is None, we assume it
+        # did not come from a browser and that it can be passed on.
+        if origin is not None and not self.check_origin(origin):
+            self.set_status(403)
+            log_msg = "Cross origin websockets not allowed"
+            self.finish(log_msg)
+            gen_log.debug(log_msg)
+            return
+
+        # Now open connection to underlying web process from ourself
+        path = ''
+        if len(args) > 0:
+            path = args[0]
+        elif 'path' in kwargs:
+            path = kwargs['path']
+
+        r = await self.ws_open_proxy('localhost', self.port, path)
+
+        if hasattr(self, 'handshake_headers'):
+            # Any headers need passing on?
+            for header, v in self.handshake_headers.get_all():
+                if header in ('Set-Cookie', 'Vary'):
+                    # some header appear multiple times, eg 'Set-Cookie'
+                    self.add_header(header, v)
+
+        # Now establish websocket between client and ourself
+        self.ws_connection = self.get_websocket_protocol()
+        if self.ws_connection:
+            await self.ws_connection.accept_connection(self)
+        else:
+            self.set_status(426, "Upgrade Required")
+            self.set_header("Sec-WebSocket-Version", "7, 8, 13")
+
     async def proxy_open(self, host, port, proxied_path=''):
+        """
+        Called when a client opens a websocket connection.
+        We establish a websocket connection to the proxied backend &
+        set up a callback to relay messages through.
+        """
+        pass
+
+    async def ws_open_proxy(self, host, port, proxied_path=''):
         """
         Called when a client opens a websocket connection.
         We establish a websocket connection to the proxied backend &
@@ -261,6 +340,9 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         headers = self.request.headers
         current_loop = ioloop.IOLoop.current()
         ws_connected = current_loop.asyncio_loop.create_future()
+
+        def headers_cb(headers):
+            self.handshake_headers = headers
 
         def message_cb(message):
             """
@@ -289,6 +371,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
             request = httpclient.HTTPRequest(url=client_uri, headers=headers)
             self.ws = await pingable_ws_connect(request=request,
                                                 on_message_callback=message_cb, on_ping_callback=ping_cb,
+                                                on_get_headers_callback=headers_cb,
                                                 subprotocols=self.subprotocols)
             ws_connected.set_result(True)
             self._record_activity()

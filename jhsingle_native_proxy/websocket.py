@@ -34,15 +34,23 @@ class PingableWSClientConnection(websocket.WebSocketClientConnection):
         if 'on_ping_callback' in kwargs:
             self._on_ping_callback = kwargs['on_ping_callback']
             del(kwargs['on_ping_callback'])
+        if 'on_get_headers_callback' in kwargs:
+            self._on_get_headers_callback = kwargs['on_get_headers_callback']
+            del(kwargs['on_get_headers_callback'])
         super().__init__(**kwargs)
 
     def on_ping(self, data):
         if self._on_ping_callback:
             self._on_ping_callback(data)
 
+    async def headers_received(self, *args, **kwargs):
+        await super().headers_received(*args, **kwargs)
+        if self._on_get_headers_callback and hasattr(self, 'headers'):
+            self._on_get_headers_callback(self.headers)
+
 
 def pingable_ws_connect(request=None, on_message_callback=None,
-                        on_ping_callback=None, subprotocols=None):
+                        on_ping_callback=None, on_get_headers_callback=None, subprotocols=None):
     """
     A variation on websocket_connect that returns a PingableWSClientConnection
     with on_ping_callback.
@@ -57,6 +65,7 @@ def pingable_ws_connect(request=None, on_message_callback=None,
                                         compression_options={},
                                         on_message_callback=on_message_callback,
                                         on_ping_callback=on_ping_callback,
+                                        on_get_headers_callback=on_get_headers_callback,
                                         max_message_size=getattr(websocket, '_default_max_message_size', 10 * 1024 * 1024),
                                         subprotocols=subprotocols)
 
@@ -93,13 +102,4 @@ class WebSocketHandlerMixin(websocket.WebSocketHandler):
         if self.request.headers.get("Upgrade", "").lower() != 'websocket':
             return await self.http_get(*args, **kwargs)
         else:
-            await maybe_future(super().get(*args, **kwargs))
-
-
-#def setup_handlers(web_app):
-#    host_pattern = '.*$'
-#    web_app.add_handlers('.*', [
-#        (url_path_join(web_app.settings['base_url'], r'/proxy/(\d+)(.*)'), LocalProxyHandler)
-#    ])
-
-# vim: set et ts=4 sw=4:
+            return await self.ws_get(*args, **kwargs)

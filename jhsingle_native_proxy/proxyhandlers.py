@@ -243,6 +243,10 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
                 self.write(response.body)
 
     async def ws_get(self, *args: Any, **kwargs: Any) -> None:
+        """
+        A version of WebSocketHandler.get that also opens the underlying process' websocket so that
+        any GET headers can also be passed back to the client.
+        """
         self.open_args = args
         self.open_kwargs = kwargs
 
@@ -287,14 +291,14 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
             gen_log.debug(log_msg)
             return
 
-        # Now open connection to underlying web process from ourself
+        # Now open connection to underlying web process from ourself - BESPOKE
         path = ''
         if len(args) > 0:
             path = args[0]
         elif 'path' in kwargs:
             path = kwargs['path']
 
-        r = await self.ws_open_proxy('localhost', self.port, path)
+        r = await self._ws_open_proxy('localhost', self.port, path)
 
         if hasattr(self, 'handshake_headers'):
             # Any headers need passing on?
@@ -303,7 +307,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
                     # some header appear multiple times, eg 'Set-Cookie'
                     self.add_header(header, v)
 
-        # Now establish websocket between client and ourself
+        # Now establish websocket between client and ourself - BACK TO ORIGINAL CODE NOW
         self.ws_connection = self.get_websocket_protocol()
         if self.ws_connection:
             await self.ws_connection.accept_connection(self)
@@ -314,16 +318,12 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
     async def proxy_open(self, host, port, proxied_path=''):
         """
         Called when a client opens a websocket connection.
-        We establish a websocket connection to the proxied backend &
-        set up a callback to relay messages through.
         """
         pass
 
-    async def ws_open_proxy(self, host, port, proxied_path=''):
+    async def _ws_open_proxy(self, host, port, proxied_path=''):
         """
-        Called when a client opens a websocket connection.
-        We establish a websocket connection to the proxied backend &
-        set up a callback to relay messages through.
+        Open the websocket of the underlying process.
         """
 
         if not self._check_host_whitelist(host):

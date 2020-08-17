@@ -123,6 +123,10 @@ the proxy (default 300). Specify 0 to never update.
 
 ## Changelog
 
+### v0.5.2 released 17 Aug 2020
+
+- Require tornado 6.0.4+
+
 ### v0.5.1 released 17 Aug 2020
 
 - Fix to ensure both websockets are opened at the same time, to avoid writing to a websocket that's not yet open.

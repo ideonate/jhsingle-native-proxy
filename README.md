@@ -123,13 +123,17 @@ the proxy (default 300). Specify 0 to never update.
 
 ## Changelog
 
+### v0.5.0 released 17 Aug 2020
+
+- Open up underlying process' websocket before connecting our own with the client. This ensures any other GET headers can be passed back to the client. (Fix for Streamlit XSRF problems.)
+
 ### v0.4.3 released 30 July 2020
 
--  Added --allow-root option (currently ignored) to avoid errors if this flag is usually passed to jupyter-singleuser
+- Added --allow-root option (currently ignored) to avoid errors if this flag is usually passed to jupyter-singleuser
 
 ### v0.4.2 released 23 July 2020
 
--  Switch to a Conda env before running subprocess by specifying --conda-env option
+- Switch to a Conda env before running subprocess by specifying --conda-env option
 
 ### v0.4.1 released 20 July 2020
 

@@ -123,6 +123,10 @@ the proxy (default 300). Specify 0 to never update.
 
 ## Changelog
 
+### v0.5.1 released 17 Aug 2020
+
+- Fix to ensure both websockets are opened at the same time, to avoid writing to a websocket that's not yet open.
+
 ### v0.5.0 released 17 Aug 2020
 
 - Open up underlying process' websocket before connecting our own with the client. This ensures any other GET headers can be passed back to the client. (Fix for Streamlit XSRF problems.)

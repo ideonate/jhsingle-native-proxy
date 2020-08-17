@@ -298,7 +298,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         elif 'path' in kwargs:
             path = kwargs['path']
 
-        r = await self._ws_open_proxy('localhost', self.port, path)
+        await self._ws_open_proxy('localhost', self.port, path)
 
         if hasattr(self, 'handshake_headers'):
             # Any headers need passing on?
@@ -314,6 +314,8 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         else:
             self.set_status(426, "Upgrade Required")
             self.set_header("Sec-WebSocket-Version", "7, 8, 13")
+            if hasattr(self, 'ws'):
+                self.ws.close()
 
     async def proxy_open(self, host, port, proxied_path=''):
         """
@@ -365,24 +367,19 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
             self._record_activity()
             self.ping(data)
 
-        async def start_websocket_connection():
-            self.log.info('Trying to establish websocket connection to {}'.format(client_uri))
-            self._record_activity()
-            request = httpclient.HTTPRequest(url=client_uri, headers=headers)
-            self.ws = await pingable_ws_connect(request=request,
-                                                on_message_callback=message_cb, on_ping_callback=ping_cb,
-                                                on_get_headers_callback=headers_cb,
-                                                subprotocols=self.subprotocols)
-            ws_connected.set_result(True)
-            self._record_activity()
-            self.log.info('Websocket connection established to {}'.format(client_uri))
+        self.log.info('Trying to establish websocket connection to {}'.format(client_uri))
+        self._record_activity()
+        request = httpclient.HTTPRequest(url=client_uri, headers=headers)
+        self.ws = await pingable_ws_connect(request=request,
+                                            on_message_callback=message_cb, on_ping_callback=ping_cb,
+                                            on_get_headers_callback=headers_cb,
+                                            subprotocols=self.subprotocols)
+        self._record_activity()
+        self.log.info('Websocket connection established to {}'.format(client_uri))
 
-        current_loop.add_callback(start_websocket_connection)
-        # Wait for the WebSocket to be connected before resolving.
-        # Otherwise, messages sent by the client before the
-        # WebSocket successful connection would be dropped.
-        await ws_connected
-
+        # We really need the underlying process websocket AND the one between client and proxy
+        # to be opened at the same time to avoid messages being proxied before one end is open.
+        # Return the future and hopefully find a way to synchronise...
 
     def proxy_request_headers(self):
         '''A dictionary of headers to be used when constructing

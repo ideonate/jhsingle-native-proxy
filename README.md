@@ -123,6 +123,10 @@ the proxy (default 300). Specify 0 to never update.
 
 ## Changelog
 
+### v0.5.3 released 3 Sep 2020
+
+- Change working folder to repofolder when specified
+
 ### v0.5.2 released 17 Aug 2020
 
 - Require tornado 6.0.4+

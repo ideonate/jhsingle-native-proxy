@@ -2,6 +2,7 @@ from queue import Queue, Empty
 import threading
 from asyncio import sleep
 import traceback
+import os
 
 from .pull import GitPuller
 
@@ -14,6 +15,7 @@ class GitWrapper():
         self.error = False
         self.logs = []
         self.gitpuller = GitPuller(repo, repobranch, repofolder)
+        self.repofolder = repofolder
 
     async def start_pull(self):
 
@@ -43,6 +45,7 @@ class GitWrapper():
                     await sleep(0.5)
                     continue
                 if progress is None:
+                    os.chdir(self.repofolder)
                     break
                 if isinstance(progress, Exception):
                     self.logs.extend([

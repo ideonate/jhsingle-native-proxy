@@ -123,7 +123,7 @@ the proxy (default 300). Specify 0 to never update.
 
 ## Changelog
 
-### v0.5.3 released 3 Sep 2020
+### v0.5.4 released 3 Sep 2020
 
 - Change working folder to repofolder when specified
 

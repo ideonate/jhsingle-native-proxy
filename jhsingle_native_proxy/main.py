@@ -42,7 +42,6 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
 
     gitwrapper = None
     if repo != '':
-        os.chdir(repofolder)
         gitwrapper = GitWrapper(repo, repobranch, repofolder)
         ensure_future(gitwrapper.start_pull())
 

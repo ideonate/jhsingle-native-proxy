@@ -1,8 +1,9 @@
 from tornado.httpserver import HTTPServer
 from tornado import ioloop
-from tornado.web import Application, RequestHandler
+from tornado.web import Application, RequestHandler, RedirectHandler
 from tornado.log import app_log
 from asyncio import ensure_future
+from urllib.parse import quote
 import click
 import re
 import os
@@ -67,7 +68,12 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
             r"^"+re.escape(prefix)+r"/(.*)",
             proxy_handler,
             dict(state={}, authtype=authtype)
-        )
+        ),
+        (
+            r"^"+re.escape(quote(prefix))+r"/(.*)",
+            RedirectHandler,
+            dict(url=prefix+"/{0}")
+        ),
     ],
     debug=debug,
     cookie_secret=os.urandom(32),

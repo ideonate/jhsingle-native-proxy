@@ -123,6 +123,10 @@ the proxy (default 300). Specify 0 to never update.
 
 ## Changelog
 
+### v0.5.5 released 10 Sep 2020
+
+- Also accept URLs at the URL-encoded equivalent of the prefix and redirect to the regular version of the URL.
+
 ### v0.5.4 released 3 Sep 2020
 
 - Change working folder to repofolder when specified

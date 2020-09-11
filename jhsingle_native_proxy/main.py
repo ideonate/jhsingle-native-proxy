@@ -70,7 +70,7 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
             dict(state={}, authtype=authtype)
         ),
         (
-            r"^"+re.escape(quote(prefix))+r"/(.*)",
+            r"^"+re.escape(prefix.replace('@', '%40'))+r"/(.*)",
             RedirectHandler,
             dict(url=prefix+"/{0}")
         ),

@@ -36,6 +36,8 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
     presentation_dirname = ''
 
     if presentation_path:
+        if not os.path.isabs(presentation_path):
+            presentation_path = os.path.join(os.getcwd(), presentation_path)
         presentation_basename = os.path.basename(presentation_path)
         presentation_dirname = os.path.dirname(presentation_path)
 

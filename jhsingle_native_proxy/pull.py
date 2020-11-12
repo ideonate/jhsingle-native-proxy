@@ -83,6 +83,7 @@ class GitPuller(Configurable):
         if self.depth and self.depth > 0:
             clone_args.extend(['--depth', str(self.depth)])
         clone_args.extend(['--branch', self.branch_name])
+        clone_args.extend(['--no-single-branch'])
         clone_args.extend([self.git_url, self.repo_dir])
         yield from execute_cmd(clone_args)
         logging.info('Repo {} initialized'.format(self.repo_dir))
@@ -215,6 +216,14 @@ class GitPuller(Configurable):
 
         # Merge master into local!
         yield from self.ensure_lock()
+
+        # Checkout branch in case we're switching
+        yield from execute_cmd([
+            'git',
+            'checkout',
+            self.branch_name
+        ], cwd=self.repo_dir)
+
         yield from execute_cmd([
             'git',
             '-c', 'user.email=nbgitpuller@nbgitpuller.link',

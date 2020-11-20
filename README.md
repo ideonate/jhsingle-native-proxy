@@ -123,6 +123,11 @@ the proxy (default 300). Specify 0 to never update.
 
 ## Changelog
 
+### v0.6.0 released 20 Nov 2020
+
+- Displays INFO level logs by default, which includes output of the subprocess (turn off with --no-logs)
+- Different handling of branch checkout when using git repo source
+
 ### v0.5.6 released 18 Sep 2020
 
 - Always convert presentation_path to an absolute path (based on CWD) before passing to the sub-command.

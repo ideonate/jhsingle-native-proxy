@@ -647,11 +647,17 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
                                 if proc.proc:
                                     stream = getattr(proc.proc, pipename, None)
                                     if stream:
-                                        line = await stream.readline()
-                                        if line:
-                                            log.info(line)
-                                        else:
-                                            break
+                                        try:
+                                            line = await stream.readline()
+                                            if line:
+                                                if pipename == 'stdout':
+                                                    log.info(line)
+                                                else:
+                                                    log.error(line)
+                                            else:
+                                                break
+                                        except ValueError:
+                                            log.info('Truncated log line from subprocess')
 
                         ensure_future(pipe_output(proc, 'stderr', self.log))
                         ensure_future(pipe_output(proc, 'stdout', self.log))

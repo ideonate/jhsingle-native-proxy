@@ -125,8 +125,10 @@ the proxy (default 300). Specify 0 to never update.
 
 ### v0.6.0 released 20 Nov 2020
 
-- Displays INFO level logs by default, which includes output of the subprocess (turn off with --no-logs)
-- Different handling of branch checkout when using git repo source
+- Displays INFO level logs by default, which includes output of the subprocess (turn off with --no-logs) [Issue #7](https://github.com/ideonate/jhsingle-native-proxy/issues/7)
+- Logs from subprocess written out at different level depending on source (stderr -> error, stdout -> info)
+- Long subprocess logs are handled and truncated instead of throwing an error [cdsdashboards issue #44](https://github.com/ideonate/cdsdashboards/issues/44)
+- Different handling of branch checkout when using git repo source, when switching brances compared to what was checked out before
 
 ### v0.5.6 released 18 Sep 2020
 

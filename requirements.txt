@@ -2,4 +2,4 @@ jupyterhub>=1.0.0
 tornado>=6.0.4
 Click>=7.0
 aiohttp
-simpervisor
+simpervisor>=0.4

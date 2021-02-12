@@ -39,6 +39,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         self.absolute_url = kwargs.pop('absolute_url', False)
         self.host_whitelist = kwargs.pop('host_whitelist', ['localhost', '127.0.0.1'])
         self.subprotocols = None
+        self.forward_user_info = kwargs.pop('forward_user_info', False)
         super().__init__(*args, **kwargs)
 
     @property
@@ -169,7 +170,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
             del headers[X_CDSDASHBOARDS_JH_USER]
 
         # Take internal _hub_auth_user_cache property of jupyterhub.services.auth.HubAuthenticated
-        if hasattr(self, '_hub_auth_user_cache'):
+        if self.forward_user_info and hasattr(self, '_hub_auth_user_cache'):
             # Only forward headline info in case, e.g. secret auth info is stored on the user object
             headers[X_CDSDASHBOARDS_JH_USER] = json.dumps(dict(
                 [(k, self._hub_auth_user_cache.get(k, None)) for k in ('kind', 'name', 'admin', 'groups')]

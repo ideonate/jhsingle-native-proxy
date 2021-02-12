@@ -1,5 +1,5 @@
 from tornado import web, httpclient, ioloop, httputil
-import os
+import os, json
 import aiohttp
 import socket
 import subprocess
@@ -160,6 +160,20 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
             context_path = self._get_context_path(port)
             headers['X-Forwarded-Context'] = context_path
             headers['X-ProxyContextPath'] = context_path
+
+        # Forward JupyterHub user info if it exists
+        X_CDSDASHBOARDS_JH_USER = 'X-CDSDASHBOARDS-JH-USER'
+
+        if X_CDSDASHBOARDS_JH_USER in headers:
+            # This must be a spoof, remove it
+            del headers[X_CDSDASHBOARDS_JH_USER]
+
+        # Take internal _hub_auth_user_cache property of jupyterhub.services.auth.HubAuthenticated
+        if hasattr(self, '_hub_auth_user_cache'):
+            # Only forward headline info in case, e.g. secret auth info is stored on the user object
+            headers[X_CDSDASHBOARDS_JH_USER] = json.dumps(dict(
+                [(k, self._hub_auth_user_cache.get(k, None)) for k in ('kind', 'name', 'admin', 'groups')]
+            ))
 
         req = httpclient.HTTPRequest(
             client_uri, method=self.request.method, body=body,

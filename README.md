@@ -123,6 +123,11 @@ the proxy (default 300). Specify 0 to never update.
 
 ## Changelog
 
+### v0.7.0 released 12 Feb 2021
+
+- New command-line option --forward-user-info to add a X-CDSDASHBOARDS-JH-USER header to the http request to the underlying service. 
+  The header value is a JSON-encoded dict containing kind, name, admin, groups fields from the logged-in JupyterHub user if available.
+
 ### v0.6.1 released 6 Jan 2021
 
 - Require simpervisor >= 0.4 to ensure Python 3.9 compat.

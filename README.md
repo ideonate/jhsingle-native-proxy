@@ -121,7 +121,17 @@ the proxy (default 300). Specify 0 to never update.
 
 --repofolder - the path of a folder (to be created if necessary) to contain the git repo contents
 
+--forward-user-info - forward to the underlying process an X-CDSDASHBOARDS-JH-USER HTTP header containing JupyterHub user info as JSON-encoded string
+
+--query-user-info - add a GET query param named CDSDASHBOARDS_JH_USER when calling underlying process containing JupyterHub user info as JSON-encoded string
+
+
 ## Changelog
+
+### v0.7.1 released 22 Feb 2021
+
+- New command-line option --query-user-info to add a CDSDASHBOARDS_JH_USER GET query param to the http
+  request to the underlying service.
 
 ### v0.7.0 released 12 Feb 2021
 

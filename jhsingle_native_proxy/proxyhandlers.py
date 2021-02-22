@@ -1,6 +1,6 @@
 from tornado import web, httpclient, ioloop, httputil
 import os, json
-import aiohttp
+import aiohttp, urllib
 import socket
 import subprocess
 from simpervisor import SupervisedProcess
@@ -40,6 +40,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         self.host_whitelist = kwargs.pop('host_whitelist', ['localhost', '127.0.0.1'])
         self.subprotocols = None
         self.forward_user_info = kwargs.pop('forward_user_info', False)
+        self.query_user_info = kwargs.pop('query_user_info', False)
         super().__init__(*args, **kwargs)
 
     @property
@@ -130,7 +131,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         else:
             return url_path_join(self.base_url, 'proxy', str(port))
 
-    def get_client_uri(self, protocol, host, port, proxied_path):
+    def get_client_uri(self, protocol, host, port, proxied_path, get_args=None):
         context_path = self._get_context_path(port)
         if self.absolute_url:
             client_path = url_path_join(context_path, proxied_path)
@@ -145,22 +146,33 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
             port=port,
             path=client_path
         )
-        if self.request.query:
-            client_uri += '?' + self.request.query
+        if get_args:
+            client_uri += '?' + get_args
 
         return client_uri
 
     def _build_proxy_request(self, host, port, proxied_path, body):
 
-        headers = self.proxy_request_headers()
+        headers, query_args = self._filter_headers_and_query(self.proxy_request_headers(), self.proxy_query_arguments())
 
-        client_uri = self.get_client_uri('http', host, port, proxied_path)
+        client_uri = self.get_client_uri('http', host, port, proxied_path, urllib.parse.urlencode(query_args, doseq=True))
         # Some applications check X-Forwarded-Context and X-ProxyContextPath
         # headers to see if and where they are being proxied from.
         if not self.absolute_url:
             context_path = self._get_context_path(port)
             headers['X-Forwarded-Context'] = context_path
             headers['X-ProxyContextPath'] = context_path
+
+        req = httpclient.HTTPRequest(
+            client_uri, method=self.request.method, body=body,
+            headers=headers, **self.proxy_request_options())
+        return req
+
+    def _filter_headers_and_query(self, headers, query_args):
+        """
+        Depending on config, add headers or query params containing JH user data
+        Return a headers dict and query dict
+        """
 
         # Forward JupyterHub user info if it exists
         X_CDSDASHBOARDS_JH_USER = 'X-CDSDASHBOARDS-JH-USER'
@@ -169,17 +181,28 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
             # This must be a spoof, remove it
             del headers[X_CDSDASHBOARDS_JH_USER]
 
-        # Take internal _hub_auth_user_cache property of jupyterhub.services.auth.HubAuthenticated
-        if self.forward_user_info and hasattr(self, '_hub_auth_user_cache'):
-            # Only forward headline info in case, e.g. secret auth info is stored on the user object
-            headers[X_CDSDASHBOARDS_JH_USER] = json.dumps(dict(
-                [(k, self._hub_auth_user_cache.get(k, None)) for k in ('kind', 'name', 'admin', 'groups')]
-            ))
+        # Include JH user in the query string
+        Q_CDSDASHBOARDS_JH_USER = 'CDSDASHBOARDS_JH_USER'
 
-        req = httpclient.HTTPRequest(
-            client_uri, method=self.request.method, body=body,
-            headers=headers, **self.proxy_request_options())
-        return req
+        if Q_CDSDASHBOARDS_JH_USER in query_args:
+            # This must be a spoof, remove it
+            del query_args[Q_CDSDASHBOARDS_JH_USER]
+
+        if (self.forward_user_info or self.query_user_info) and hasattr(self, '_hub_auth_user_cache'):
+            # Take internal _hub_auth_user_cache property of jupyterhub.services.auth.HubAuthenticated
+            # Only include headline info in case, e.g. secret auth info is stored on the user object
+
+            user_info_str = json.dumps(dict(
+                    [(k, self._hub_auth_user_cache.get(k, None)) for k in ('kind', 'name', 'admin', 'groups')]
+                ))
+
+            if self.forward_user_info:
+                headers[X_CDSDASHBOARDS_JH_USER] = user_info_str
+
+            if self.query_user_info:
+                query_args[Q_CDSDASHBOARDS_JH_USER] = user_info_str
+
+        return headers, query_args
 
     def _check_host_whitelist(self, host):
         if callable(self.host_whitelist):
@@ -353,8 +376,10 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         if not proxied_path.startswith('/'):
             proxied_path = '/' + proxied_path
 
-        client_uri = self.get_client_uri('ws', host, port, proxied_path)
-        headers = self.request.headers
+        headers, query_args = self._filter_headers_and_query(self.proxy_request_headers(), self.proxy_query_arguments())
+
+        client_uri = self.get_client_uri('ws', host, port, proxied_path, urllib.parse.urlencode(query_args, doseq=True))
+
         current_loop = ioloop.IOLoop.current()
         ws_connected = current_loop.asyncio_loop.create_future()
 
@@ -400,6 +425,11 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         '''A dictionary of headers to be used when constructing
         a tornado.httpclient.HTTPRequest instance for the proxy request.'''
         return self.request.headers.copy()
+
+    def proxy_query_arguments(self):
+        '''A dictionary of query args to be used when constructing
+        a tornado.httpclient.HTTPRequest instance for the proxy request.'''
+        return self.request.query_arguments.copy()
 
     def proxy_request_options(self):
         '''A dictionary of options to be used when constructing

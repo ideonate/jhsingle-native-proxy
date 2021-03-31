@@ -1,5 +1,5 @@
 from tornado import web, httpclient, ioloop, httputil
-import os, json
+import os, json, re
 import aiohttp, urllib
 import socket
 import subprocess
@@ -151,7 +151,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
 
         return client_uri
 
-    def _build_proxy_request(self, host, port, proxied_path, body):
+    def _build_proxy_request(self, host, port, proxied_path, body, **extra_opts):
 
         headers, query_args = self._filter_headers_and_query(self.proxy_request_headers(), self.proxy_query_arguments())
 
@@ -165,7 +165,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
 
         req = httpclient.HTTPRequest(
             client_uri, method=self.request.method, body=body,
-            headers=headers, **self.proxy_request_options())
+            headers=headers, **self.proxy_request_options(), **extra_opts)
         return req
 
     def _filter_headers_and_query(self, headers, query_args):
@@ -191,6 +191,8 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         if (self.forward_user_info or self.query_user_info) and hasattr(self, '_hub_auth_user_cache'):
             # Take internal _hub_auth_user_cache property of jupyterhub.services.auth.HubAuthenticated
             # Only include headline info in case, e.g. secret auth info is stored on the user object
+
+            self.log.info(self._hub_auth_user_cache)
 
             user_info_str = json.dumps(dict(
                     [(k, self._hub_auth_user_cache.get(k, None)) for k in ('kind', 'name', 'admin', 'groups')]
@@ -245,7 +247,43 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
 
         client = httpclient.AsyncHTTPClient()
 
-        req = self._build_proxy_request(host, port, proxied_path, body)
+        # Set up handlers so we can progressively flush result
+
+        headers_raw = []
+
+        def dump_headers(headers_raw):
+            for line in headers_raw:
+                r = re.match('^([a-zA-Z0-9\-_]+)\s*\:\s*([^\r\n]+)$', line)
+                if r:
+                    k,v = r.groups([1,2])
+                    if k not in ('Content-Length', 'Transfer-Encoding',
+                                  'Content-Encoding', 'Connection'):
+                        # some header appear multiple times, eg 'Set-Cookie'
+                        self.set_header(k,v)
+                else:
+                    r = re.match('^HTTP[^\s]* ([0-9]+)', line)
+                    if r:
+                        status_code = r.group(1)
+                        self.set_status(int(status_code))
+            headers_raw.clear()
+
+        # clear tornado default header
+        self._headers = httputil.HTTPHeaders()
+
+        def header_callback(line):
+            headers_raw.append(line)
+
+        def streaming_callback(chunk):
+            # Do this here, not in header_callback so we can be sure headers are out of the way first
+            dump_headers(headers_raw) # array will be empty if this was already called before
+            self.write(chunk)
+            self.flush()
+
+        # Now make the request
+
+        req = self._build_proxy_request(host, port, proxied_path, body, 
+                    streaming_callback=streaming_callback, 
+                    header_callback=header_callback)
 
         try:
             response = await client.fetch(req, raise_error=False)
@@ -266,18 +304,11 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
             self.set_status(500)
             self.write(str(response.error))
         else:
-            self.set_status(response.code, response.reason)
+            self.set_status(response.code, response.reason) # Should already have been set
 
-            # clear tornado default header
-            self._headers = httputil.HTTPHeaders()
+            dump_headers(headers_raw) # Should already have been emptied
 
-            for header, v in response.headers.get_all():
-                if header not in ('Content-Length', 'Transfer-Encoding',
-                                  'Content-Encoding', 'Connection'):
-                    # some header appear multiple times, eg 'Set-Cookie'
-                    self.add_header(header, v)
-
-            if response.body:
+            if response.body: # Likewise, should already be chunked out and flushed
                 self.write(response.body)
 
     async def ws_get(self, *args: Any, **kwargs: Any) -> None:

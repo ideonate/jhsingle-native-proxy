@@ -253,7 +253,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
 
         def dump_headers(headers_raw):
             for line in headers_raw:
-                r = re.match('^([a-zA-Z0-9\-_]+)\s*\:\s*([^\r\n]+)$', line)
+                r = re.match('^([a-zA-Z0-9\-_]+)\s*\:\s*([^\r\n]+)[\r\n]*$', line)
                 if r:
                     k,v = r.groups([1,2])
                     if k not in ('Content-Length', 'Transfer-Encoding',

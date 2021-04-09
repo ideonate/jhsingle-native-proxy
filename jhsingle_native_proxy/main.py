@@ -31,7 +31,7 @@ def patch_default_headers():
 
 
 def make_app(destport, prefix, command, presentation_path, authtype, request_timeout, ready_check_path, repo, 
-                repobranch, repofolder, conda_env_name, debug, logs, forward_user_info, query_user_info):
+                repobranch, repofolder, conda_env_name, debug, logs, forward_user_info, query_user_info, progressive):
 
     presentation_basename = ''
     presentation_dirname = ''
@@ -71,7 +71,7 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
             r"^"+re.escape(prefix)+r"/(.*)",
             proxy_handler,
             dict(state={}, authtype=authtype,
-                forward_user_info=forward_user_info, query_user_info=query_user_info)
+                forward_user_info=forward_user_info, query_user_info=query_user_info, progressive=progressive)
         ),
         (
             r"^"+re.escape(prefix.replace('@', '%40'))+r"/(.*)",
@@ -145,9 +145,10 @@ def get_ssl_options():
 @click.option('--NotebookApp.allow_origin/--no-NotebookApp.allow_origin', 'notebookapp_allow_origin', default=True, help='Currently ignored - present to avoid error if this flag is usually passed to singleuser notebook')
 @click.option('--forward-user-info/--no-forward-user-info', default=False, help='Forward a X-CDSDASHBOARDS-JH-USER HTTP header to process containing JupyterHub user data')
 @click.option('--query-user-info/--no-query-user-info', default=False, help='Add a CDSDASHBOARDS_JH_USER GET query arg in HTTP request to process containing JupyterHub user data')
+@click.option('--progressive/--no-progressive', default=False, help='Progressively flush responses as they arrive (good for Voila)')
 @click.argument('command', nargs=-1, required=True)
 def run(port, destport, ip, presentation_path, debug, logs, authtype, request_timeout, last_activity_interval, force_alive, ready_check_path, 
-        repo, repobranch, repofolder, conda_env, allow_root, notebookapp_allow_origin, forward_user_info, query_user_info, command):
+        repo, repobranch, repofolder, conda_env, allow_root, notebookapp_allow_origin, forward_user_info, query_user_info, progressive, command):
 
     if debug:
         print('Setting debug')
@@ -163,7 +164,7 @@ def run(port, destport, ip, presentation_path, debug, logs, authtype, request_ti
     configure_http_client()
 
     app = make_app(destport, prefix, list(command), presentation_path, authtype, request_timeout, ready_check_path, 
-        repo, repobranch, repofolder, conda_env, debug, logs, forward_user_info, query_user_info)
+        repo, repobranch, repofolder, conda_env, debug, logs, forward_user_info, query_user_info, progressive)
 
     ssl_options = get_ssl_options()
 

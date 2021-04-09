@@ -41,6 +41,7 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         self.subprotocols = None
         self.forward_user_info = kwargs.pop('forward_user_info', False)
         self.query_user_info = kwargs.pop('query_user_info', False)
+        self.progressive = kwargs.pop('progressive', False)
         super().__init__(*args, **kwargs)
 
     @property
@@ -245,6 +246,14 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
             else:
                 body = None
 
+        if self.progressive:
+            return await self._proxy_progressive(host, port, proxied_path, body)
+        else:
+            return await self._proxy_normal(host, port, proxied_path, body)
+
+    async def _proxy_progressive(self, host, port, proxied_path, body):
+        # Proxy in progressive flush mode, whenever chunks are received. Potentially slower but get results quicker for voila
+
         client = httpclient.AsyncHTTPClient()
 
         # Set up handlers so we can progressively flush result
@@ -309,6 +318,45 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
             dump_headers(headers_raw) # Should already have been emptied
 
             if response.body: # Likewise, should already be chunked out and flushed
+                self.write(response.body)
+
+    async def _proxy_normal(self, host, port, proxied_path, body):
+        # Proxy using normal mode - only write on completion
+        client = httpclient.AsyncHTTPClient()
+
+        req = self._build_proxy_request(host, port, proxied_path, body)
+
+        try:
+            response = await client.fetch(req, raise_error=False)
+        except httpclient.HTTPError as err:
+            if err.code == 599:
+                self._record_activity()
+                self.set_status(599)
+                self.write(str(err))
+                return
+            else:
+                raise
+
+        # record activity at start and end of requests
+        self._record_activity()
+
+        # For all non http errors...
+        if response.error and type(response.error) is not httpclient.HTTPError:
+            self.set_status(500)
+            self.write(str(response.error))
+        else:
+            self.set_status(response.code, response.reason)
+
+            # clear tornado default header
+            self._headers = httputil.HTTPHeaders()
+
+            for header, v in response.headers.get_all():
+                if header not in ('Content-Length', 'Transfer-Encoding',
+                                  'Content-Encoding', 'Connection'):
+                    # some header appear multiple times, eg 'Set-Cookie'
+                    self.add_header(header, v)
+
+            if response.body:
                 self.write(response.body)
 
     async def ws_get(self, *args: Any, **kwargs: Any) -> None:

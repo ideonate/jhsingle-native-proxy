@@ -128,6 +128,11 @@ the proxy (default 300). Specify 0 to never update.
 
 ## Changelog
 
+### v0.7.3 released 9 Apr 2021
+
+- New command-line option --progressive to flush buffer from underlying service whenever chunks appear (this is useful to see results from Voila sooner)
+- oauth_callback URL now accessible when running with JUPYTERHUB_BASE_URL of /
+
 ### v0.7.1 released 22 Feb 2021
 
 - New command-line option --query-user-info to add a CDSDASHBOARDS_JH_USER GET query param to the http

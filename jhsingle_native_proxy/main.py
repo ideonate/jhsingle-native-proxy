@@ -64,7 +64,7 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
             AddSlashHandler
         ),
         (
-            url_path_join(prefix, 'oauth_callback'),
+            r"^"+re.escape(prefix)+r"/oauth_callback",
             HubOAuthCallbackHandler,
         ),
         (

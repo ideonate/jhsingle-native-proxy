@@ -970,7 +970,4 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
             else:
                 return self._render_template(environment)
 
-        def get_timeout(self):
-            return timeout
-
     return _Proxy

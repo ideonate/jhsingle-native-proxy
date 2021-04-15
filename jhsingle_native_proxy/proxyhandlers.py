@@ -732,7 +732,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
                 timeout = self.get_timeout()
 
-                self.log.info(cmd)
+                self.log.info(f'Running command: {cmd} with ready_timeout={timeout}')
 
                 proc = SupervisedProcess(self.name, *cmd, env=server_env, ready_func=self._http_ready_func, ready_timeout=timeout, log=self.log,
                                             stderr=subprocess.PIPE, stdout=subprocess.PIPE)

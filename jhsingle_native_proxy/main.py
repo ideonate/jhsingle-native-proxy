@@ -31,7 +31,8 @@ def patch_default_headers():
 
 
 def make_app(destport, prefix, command, presentation_path, authtype, request_timeout, ready_check_path, ready_timeout, repo,
-                repobranch, repofolder, conda_env_name, debug, logs, forward_user_info, query_user_info, progressive):
+                repobranch, repofolder, conda_env_name, debug, logs, forward_user_info, query_user_info, progressive, 
+                websocket_max_message_size):
 
     presentation_basename = ''
     presentation_dirname = ''
@@ -89,7 +90,8 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
     presentation_path=presentation_path,
     presentation_basename=presentation_basename,
     presentation_dirname=presentation_dirname,
-    request_timeout=request_timeout
+    request_timeout=request_timeout,
+    websocket_max_message_size=websocket_max_message_size
     )
 
 def get_ssl_options():
@@ -147,9 +149,11 @@ def get_ssl_options():
 @click.option('--forward-user-info/--no-forward-user-info', default=False, help='Forward a X-CDSDASHBOARDS-JH-USER HTTP header to process containing JupyterHub user data')
 @click.option('--query-user-info/--no-query-user-info', default=False, help='Add a CDSDASHBOARDS_JH_USER GET query arg in HTTP request to process containing JupyterHub user data')
 @click.option('--progressive/--no-progressive', default=False, help='Progressively flush responses as they arrive (good for Voila)')
+@click.option('--websocket-max-message-size', default=0, type=click.INT, help='Max size of websocket data (default 0, meaning leave to library defaults)')
 @click.argument('command', nargs=-1, required=True)
 def run(port, destport, ip, presentation_path, debug, logs, authtype, request_timeout, last_activity_interval, force_alive, ready_check_path, 
-        ready_timeout, repo, repobranch, repofolder, conda_env, allow_root, notebookapp_allow_origin, forward_user_info, query_user_info, progressive, command):
+        ready_timeout, repo, repobranch, repofolder, conda_env, allow_root, notebookapp_allow_origin, forward_user_info, query_user_info, progressive, 
+        websocket_max_message_size, command):
 
     if debug:
         print('Setting debug')
@@ -165,7 +169,8 @@ def run(port, destport, ip, presentation_path, debug, logs, authtype, request_ti
     configure_http_client()
 
     app = make_app(destport, prefix, list(command), presentation_path, authtype, request_timeout, ready_check_path, 
-        ready_timeout, repo, repobranch, repofolder, conda_env, debug, logs, forward_user_info, query_user_info, progressive)
+        ready_timeout, repo, repobranch, repofolder, conda_env, debug, logs, forward_user_info, query_user_info, 
+        progressive, websocket_max_message_size)
 
     ssl_options = get_ssl_options()
 

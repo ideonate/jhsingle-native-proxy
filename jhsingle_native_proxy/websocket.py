@@ -50,7 +50,7 @@ class PingableWSClientConnection(websocket.WebSocketClientConnection):
 
 
 def pingable_ws_connect(request=None, on_message_callback=None,
-                        on_ping_callback=None, on_get_headers_callback=None, subprotocols=None):
+                        on_ping_callback=None, on_get_headers_callback=None, subprotocols=None, max_message_size=None):
     """
     A variation on websocket_connect that returns a PingableWSClientConnection
     with on_ping_callback.
@@ -61,12 +61,16 @@ def pingable_ws_connect(request=None, on_message_callback=None,
     request = httpclient._RequestProxy(
         request, httpclient.HTTPRequest._DEFAULTS)
 
+    if not max_message_size:
+        max_message_size = getattr(websocket, '_default_max_message_size', 10 * 1024 * 1024)
+        print('USING DEFAULT MAXMESSAGESIZE')
+
     conn = PingableWSClientConnection(request=request,
                                         compression_options={},
                                         on_message_callback=on_message_callback,
                                         on_ping_callback=on_ping_callback,
                                         on_get_headers_callback=on_get_headers_callback,
-                                        max_message_size=getattr(websocket, '_default_max_message_size', 10 * 1024 * 1024),
+                                        max_message_size=max_message_size,
                                         subprotocols=subprotocols)
 
     return conn.connect_future

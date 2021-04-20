@@ -492,7 +492,8 @@ class ProxyHandler(HubOAuthenticated, WebSocketHandlerMixin):
         self.ws = await pingable_ws_connect(request=request,
                                             on_message_callback=message_cb, on_ping_callback=ping_cb,
                                             on_get_headers_callback=headers_cb,
-                                            subprotocols=self.subprotocols)
+                                            subprotocols=self.subprotocols,
+                                            max_message_size=self.settings['websocket_max_message_size'])
         self._record_activity()
         self.log.info('Websocket connection established to {}'.format(client_uri))
 

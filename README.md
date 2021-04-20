@@ -107,7 +107,7 @@ to allow any authenticated user access. (i.e. anyone who has an account on the J
 
 ### Extra Arguments
 
---request-timeout=300 specifies the timeout in seconds that it waits for the underlying subprocess to return. Default is 300.
+--request-timeout=300 specifies the timeout in seconds that it waits for the underlying subprocess to return when proxying normal requests. Default is 300.
 
 {origin_host} in the command argument will be replaced with the first 'host' seen in any request to the jhsingle-native-proxy server.
 
@@ -124,6 +124,8 @@ the proxy (default 300). Specify 0 to never update.
 --forward-user-info - forward to the underlying process an X-CDSDASHBOARDS-JH-USER HTTP header containing JupyterHub user info as JSON-encoded string
 
 --query-user-info - add a GET query param named CDSDASHBOARDS_JH_USER when calling underlying process containing JupyterHub user info as JSON-encoded string
+
+--ready-timeout - integer timeout for period of checking the process is running at startup (default 10). Increase if your process is not able to return anything at --ready-check-path until a longer time after it first starts up. Be aware that the process must (once ready) return its HTTP response within 1 second. Note this argument is different from --request-timeout which applies to individual HTTP proxy calls during normal operation (not just at startup).
 
 
 ## Changelog

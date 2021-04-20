@@ -654,6 +654,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         self.origin_host = None
 
         self.ready_check_path = '/'
+        self.ready_timeout = 10
 
         super().__init__(*args, **kwargs)
 
@@ -732,7 +733,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
                 timeout = self.get_timeout()
 
-                self.log.info(f'Running command: {cmd} with ready_timeout={timeout}')
+                self.log.info(cmd)
 
                 proc = SupervisedProcess(self.name, *cmd, env=server_env, ready_func=self._http_ready_func, ready_timeout=timeout, log=self.log,
                                             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -882,7 +883,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         self.origin_host = self.request.host
 
 
-def _make_serverproxy_handler(name, command, environment, timeout, absolute_url, port, ready_check_path, ready_timeout, gitwrapper, mappath):
+def _make_serverproxy_handler(name, command, environment, absolute_url, port, ready_check_path, ready_timeout, gitwrapper, mappath):
     """
     Create a SuperviseAndProxyHandler subclass with given parameters
     """

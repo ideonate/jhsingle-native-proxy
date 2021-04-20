@@ -31,7 +31,7 @@ def patch_default_headers():
 
 
 def make_app(destport, prefix, command, presentation_path, authtype, request_timeout, ready_check_path, ready_timeout, repo,
-                repobranch, repofolder, conda_env_name, debug, logs, forward_user_info, query_user_info, progressive, 
+                repobranch, repofolder, conda_env_name, debug, logs, forward_user_info, query_user_info, progressive,
                 websocket_max_message_size):
 
     presentation_basename = ''
@@ -59,6 +59,21 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
 
     proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, False, destport, ready_check_path, ready_timeout, gitwrapper, {})
 
+    options = dict(debug=debug,
+    logs=logs,
+    cookie_secret=os.urandom(32),
+    user=os.environ.get('JUPYTERHUB_USER') or '',
+    group=os.environ.get('JUPYTERHUB_GROUP') or '',
+    anyone=os.environ.get('JUPYTERHUB_ANYONE') or '',
+    base_url=prefix, # This is a confusing name, sorry
+    presentation_path=presentation_path,
+    presentation_basename=presentation_basename,
+    presentation_dirname=presentation_dirname,
+    request_timeout=request_timeout)
+
+    if websocket_max_message_size:
+        options['websocket_max_message_size'] = websocket_max_message_size
+
     return Application([
         (
             r"^"+re.escape(prefix)+r"$",
@@ -80,18 +95,7 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
             dict(url=prefix+"/{0}")
         ),
     ],
-    debug=debug,
-    logs=logs,
-    cookie_secret=os.urandom(32),
-    user=os.environ.get('JUPYTERHUB_USER') or '',
-    group=os.environ.get('JUPYTERHUB_GROUP') or '',
-    anyone=os.environ.get('JUPYTERHUB_ANYONE') or '',
-    base_url=prefix, # This is a confusing name, sorry
-    presentation_path=presentation_path,
-    presentation_basename=presentation_basename,
-    presentation_dirname=presentation_dirname,
-    request_timeout=request_timeout,
-    websocket_max_message_size=websocket_max_message_size
+    **options
     )
 
 def get_ssl_options():

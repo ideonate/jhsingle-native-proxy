@@ -132,7 +132,7 @@ the proxy (default 300). Specify 0 to never update.
 
 ## Changelog
 
-### v0.7.4 released 20 Apr 2021
+### v0.7.5 released 20 Apr 2021
 
 - New command-line options --ready-timeout and --websocket-max-message-size
 

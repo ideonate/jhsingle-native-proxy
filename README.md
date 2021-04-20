@@ -127,8 +127,14 @@ the proxy (default 300). Specify 0 to never update.
 
 --ready-timeout - integer timeout for period of checking the process is running at startup (default 10). Increase if your process is not able to return anything at --ready-check-path until a longer time after it first starts up. Be aware that the process must (once ready) return its HTTP response within 1 second. Note this argument is different from --request-timeout which applies to individual HTTP proxy calls during normal operation (not just at startup).
 
+--websocket-max-message-size - message size in bytes allowed by websocket connections made to the underlying process (default is to rely on the tornado library defaults).
+
 
 ## Changelog
+
+### v0.7.5 released 20 Apr 2021
+
+- New command-line options --ready-timeout and --websocket-max-message-size
 
 ### v0.7.3 released 9 Apr 2021
 

@@ -697,7 +697,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         """
         Return timeout (in s) to wait before giving up on process readiness
         """
-        return 5
+        return self.ready_timeout
 
     async def _http_ready_func(self, p):
         url = 'http://localhost:{}{}'.format(self.port, self.ready_check_path)
@@ -732,7 +732,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
                 timeout = self.get_timeout()
 
-                self.log.info(cmd)
+                self.log.info(f'Running command: {cmd} with ready_timeout={timeout}')
 
                 proc = SupervisedProcess(self.name, *cmd, env=server_env, ready_func=self._http_ready_func, ready_timeout=timeout, log=self.log,
                                             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -882,7 +882,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         self.origin_host = self.request.host
 
 
-def _make_serverproxy_handler(name, command, environment, timeout, absolute_url, port, ready_check_path, gitwrapper, mappath):
+def _make_serverproxy_handler(name, command, environment, timeout, absolute_url, port, ready_check_path, ready_timeout, gitwrapper, mappath):
     """
     Create a SuperviseAndProxyHandler subclass with given parameters
     """
@@ -897,6 +897,7 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
             self.mappath = mappath
             self.ready_check_path = ready_check_path
             self.gitwrapper = gitwrapper
+            self.ready_timeout = ready_timeout
 
         @property
         def process_args(self):
@@ -969,8 +970,4 @@ def _make_serverproxy_handler(name, command, environment, timeout, absolute_url,
             else:
                 return self._render_template(environment)
 
-        def get_timeout(self):
-            return timeout
-
     return _Proxy
-

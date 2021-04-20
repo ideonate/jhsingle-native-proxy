@@ -30,7 +30,7 @@ def patch_default_headers():
     RequestHandler.set_default_headers = set_jupyterhub_header
 
 
-def make_app(destport, prefix, command, presentation_path, authtype, request_timeout, ready_check_path, repo, 
+def make_app(destport, prefix, command, presentation_path, authtype, request_timeout, ready_check_path, ready_timeout, repo,
                 repobranch, repofolder, conda_env_name, debug, logs, forward_user_info, query_user_info, progressive):
 
     presentation_basename = ''
@@ -56,7 +56,7 @@ def make_app(destport, prefix, command, presentation_path, authtype, request_tim
         
         command = ['python3', '-m', 'jhsingle_native_proxy.conda_runner', conda_prefix, env_path] + command
 
-    proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 10, False, destport, ready_check_path, gitwrapper, {})
+    proxy_handler = _make_serverproxy_handler('mainprocess', command, {}, 10, False, destport, ready_check_path, ready_timeout, gitwrapper, {})
 
     return Application([
         (
@@ -137,6 +137,7 @@ def get_ssl_options():
 @click.option('--last-activity-interval', default=300, type=click.INT, help='frequency to notify hub that dashboard is still running in seconds (default 300), 0 for never')
 @click.option('--force-alive/--no-force-alive', default=True, help='Always report that there has been activity (force keep alive) - only happens if last-activity-interval > 0')
 @click.option('--ready-check-path', default='/', help='URL path to poll for readiness (default /)')
+@click.option('--ready-timeout', default=60, help='Timeout for readiness request in seconds (default 60)')
 @click.option('--repo', default='', help="Git repo to pull before running webapp subprocess")
 @click.option('--repobranch', default='master', help="Branch to checkout (if --repo provided)")
 @click.option('--repofolder', default='.', help="Relative folder to hold git repo contents (if --repo provided)")
@@ -148,7 +149,7 @@ def get_ssl_options():
 @click.option('--progressive/--no-progressive', default=False, help='Progressively flush responses as they arrive (good for Voila)')
 @click.argument('command', nargs=-1, required=True)
 def run(port, destport, ip, presentation_path, debug, logs, authtype, request_timeout, last_activity_interval, force_alive, ready_check_path, 
-        repo, repobranch, repofolder, conda_env, allow_root, notebookapp_allow_origin, forward_user_info, query_user_info, progressive, command):
+        ready_timeout, repo, repobranch, repofolder, conda_env, allow_root, notebookapp_allow_origin, forward_user_info, query_user_info, progressive, command):
 
     if debug:
         print('Setting debug')
@@ -164,7 +165,7 @@ def run(port, destport, ip, presentation_path, debug, logs, authtype, request_ti
     configure_http_client()
 
     app = make_app(destport, prefix, list(command), presentation_path, authtype, request_timeout, ready_check_path, 
-        repo, repobranch, repofolder, conda_env, debug, logs, forward_user_info, query_user_info, progressive)
+        ready_timeout, repo, repobranch, repofolder, conda_env, debug, logs, forward_user_info, query_user_info, progressive)
 
     ssl_options = get_ssl_options()
 

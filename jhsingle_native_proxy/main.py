@@ -3,7 +3,7 @@ from tornado import ioloop
 from tornado.web import Application, RequestHandler, RedirectHandler
 from tornado.log import app_log
 from asyncio import ensure_future
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 import click
 import re
 import os
@@ -131,8 +131,22 @@ def get_ssl_options():
 
     return ssl_options
 
+
+# https://github.com/jupyterhub/jupyterhub/blob/2.0.0rc3/jupyterhub/singleuser/mixins.py#L340-L349
+def get_port_from_env():
+    if os.environ.get('JUPYTERHUB_SERVICE_URL'):
+        url = urlparse(os.environ['JUPYTERHUB_SERVICE_URL'])
+        if url.port:
+            return url.port
+        elif url.scheme == 'http':
+            return 80
+        elif url.scheme == 'https':
+            return 443
+    return 8888
+
+
 @click.command()
-@click.option('--port', default=8888, help='port for the proxy server to listen on')
+@click.option('--port', default=get_port_from_env(), help='port for the proxy server to listen on')
 @click.option('--destport', default=0, help='port that the webapp should end up running on; default 0 to be assigned a random free port')
 @click.option('--ip', default=None, help='Address to listen on')
 @click.option('--presentation-path', default='', help='presentation_path substitution variable')

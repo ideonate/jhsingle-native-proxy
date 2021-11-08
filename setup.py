@@ -12,7 +12,7 @@ install_requires = [e.strip() for e in li_req if len(e)]
 
 setuptools.setup(
     name="jhsingle-native-proxy",
-    version="0.7.6",
+    version="0.8.0",
     author="Dan Lester",
     author_email="dan@ideonate.com",
     description="Wrap an arbitrary webapp so it can be used in place of jupyter-singleuser in a JupyterHub setting",

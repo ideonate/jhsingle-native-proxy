@@ -132,6 +132,10 @@ the proxy (default 300). Specify 0 to never update.
 
 ## Changelog
 
+### v0.8.0 released 8 Nov 2021
+
+- Change to work with JupyterHub 2 (detects port from JUPYTERHUB_SERVICE_URL env var if no --port set)
+
 ### v0.7.6 released 20 Apr 2021
 
 - New command-line options --ready-timeout and --websocket-max-message-size

@@ -129,6 +129,7 @@ the proxy (default 300). Specify 0 to never update.
 
 --websocket-max-message-size - message size in bytes allowed by websocket connections made to the underlying process (default is to rely on the tornado library defaults).
 
+ --progressive - flush buffer from underlying service whenever chunks appear (this is useful to see results from Voila sooner)
 
 ## Changelog
 

@@ -133,6 +133,10 @@ the proxy (default 300). Specify 0 to never update.
 
 ## Changelog
 
+### v0.8.1 released 13 Jun 2023
+
+- Pin simpervisor version to avoid conflict with version 1.0. Thanks to [dangercrow](https://github.com/dangercrow).
+
 ### v0.8.0 released 8 Nov 2021
 
 - Change to work with JupyterHub 2 (detects port from JUPYTERHUB_SERVICE_URL env var if no --port set)

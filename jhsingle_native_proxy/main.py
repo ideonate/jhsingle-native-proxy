@@ -1,7 +1,7 @@
 from tornado.httpserver import HTTPServer
 from tornado import ioloop
 from tornado.web import Application, RequestHandler, RedirectHandler
-from tornado.log import app_log
+from tornado.log import app_log, gen_log, enable_pretty_logging
 from asyncio import ensure_future
 from urllib.parse import quote, urlparse
 import click
@@ -172,6 +172,11 @@ def get_port_from_env():
 def run(port, destport, ip, presentation_path, debug, logs, authtype, request_timeout, last_activity_interval, force_alive, ready_check_path, 
         ready_timeout, repo, repobranch, repofolder, conda_env, allow_root, notebookapp_allow_origin, forward_user_info, query_user_info, progressive, 
         websocket_max_message_size, command):
+    
+    # enable_pretty_logging sets StreamHandler and Formatter for the specified loggers so that Jhsingle-native-proxy logs are formatted, sent to sys.stderr, and then outputted in the console. 
+    print("Setting pretty logging")
+    enable_pretty_logging(logger=app_log)
+    enable_pretty_logging(logger=gen_log)
 
     if debug:
         print('Setting debug')

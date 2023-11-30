@@ -776,9 +776,9 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
                                             line = await stream.readline()
                                             if line:
                                                 if pipename == 'stdout':
-                                                    log.info(line)
+                                                    log.info(line.decode().strip())
                                                 else:
-                                                    log.error(line)
+                                                    log.error(line.decode().strip())
                                             else:
                                                 break
                                         except ValueError:

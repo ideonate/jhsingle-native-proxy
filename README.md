@@ -133,6 +133,10 @@ the proxy (default 300). Specify 0 to never update.
 
 ## Changelog
 
+### v0.8.2 released 30 Nov 2023
+
+- Better logging output via Tornado. Thanks to [aditipate](https://github.com/aditipate).
+
 ### v0.8.1 released 13 Jun 2023
 
 - Pin simpervisor version to avoid conflict with version 1.0. Thanks to [dangercrow](https://github.com/dangercrow).

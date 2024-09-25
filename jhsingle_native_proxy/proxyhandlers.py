@@ -655,6 +655,8 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
         self.ready_check_path = '/'
         self.ready_timeout = 10
+        self.aiohttp_no_ssl_connector = True 
+        self.aiohttp_request_timeout = 300
 
         super().__init__(*args, **kwargs)
 
@@ -702,7 +704,21 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
 
     async def _http_ready_func(self, p):
         url = 'http://localhost:{}{}'.format(self.port, self.ready_check_path)
-        async with aiohttp.ClientSession() as session:
+
+
+        if self.aiohttp_no_ssl_connector:
+            # Connector for working with HTTP and HTTPS via TCP sockets.
+            connector = aiohttp.TCPConnector(
+                family=socket.AF_INET,
+                verify_ssl=False)
+        else:
+            connector = None
+
+        # Timeout for entire request operation 
+        timeout = aiohttp.ClientTimeout(total=self.aiohttp_request_timeout)
+
+
+        async with aiohttp.ClientSession(timeout=timeout, connector=connector) as session:
             try:
                 async with session.get(url) as resp:
                     # We only care if we get back *any* response, not just 200
@@ -883,7 +899,7 @@ class SuperviseAndProxyHandler(LocalProxyHandler):
         self.origin_host = self.request.host
 
 
-def _make_serverproxy_handler(name, command, environment, absolute_url, port, ready_check_path, ready_timeout, gitwrapper, mappath):
+def _make_serverproxy_handler(name, command, environment, absolute_url, port, ready_check_path, ready_timeout, gitwrapper, aiohttp_no_ssl_connector, aiohttp_request_timeout, mappath):
     """
     Create a SuperviseAndProxyHandler subclass with given parameters
     """
@@ -899,6 +915,8 @@ def _make_serverproxy_handler(name, command, environment, absolute_url, port, re
             self.ready_check_path = ready_check_path
             self.gitwrapper = gitwrapper
             self.ready_timeout = ready_timeout
+            self.aiohttp_no_ssl_connector = aiohttp_no_ssl_connector 
+            self.aiohttp_request_timeout = aiohttp_request_timeout 
 
         @property
         def process_args(self):

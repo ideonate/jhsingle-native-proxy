@@ -4,10 +4,10 @@ Wrap an arbitrary webapp so it can be used in place of jupyter-singleuser in a J
 
 Within JupyterHub this allows similar operation to [jupyter-server-proxy](https://github.com/jupyterhub/jupyter-server-proxy) except it also removes the Jupyter notebook itself, so is working directly with the arbitrary web service.
 
-OAuth authentication is enforced based on JUPYTERHUB_* environment variables.
+OAuth authentication is enforced based on JUPYTERHUB\_\* environment variables.
 
-This project is used in [ContainDS Dashboards](https://github.com/ideonate/cdsdashboards), which is a user-friendly 
-way to launch Jupyter notebooks as shareable dashboards inside JupyterHub. Also works with Streamlit and other 
+This project is used in [ContainDS Dashboards](https://github.com/ideonate/cdsdashboards), which is a user-friendly
+way to launch Jupyter notebooks as shareable dashboards inside JupyterHub. Also works with Streamlit and other
 visualization frameworks.
 
 ## Install and Run
@@ -26,10 +26,10 @@ jhsingle-native-proxy streamlit hello
 
 By default the jhsingle-native-proxy server will listen on port 8888, forwarding to port 8500.
 
-But you will normally need to tell jhsingle-native-proxy which port the end process will run in, and maybe tell the 
+But you will normally need to tell jhsingle-native-proxy which port the end process will run in, and maybe tell the
 end process which port you want it to use (which you can do with the substitution variable {port}).
 
-Note the use of -- to signal the end of command line options to jhsingle-native-proxy. Then the third party command line 
+Note the use of -- to signal the end of command line options to jhsingle-native-proxy. Then the third party command line
 itself can contain options starting with dashes. An alternative is to use the substitution {--}
 
 ```
@@ -48,16 +48,16 @@ To run jhsingle-native-proxy on port 8000, and the end process on 8505:
 jhsingle-native-proxy --port 8000 --destport 8505 -- streamlit hello --server.port {port} --server.headless True --server.enableCORS False
 ```
 
-Use the JUPYTERHUB_SERVICE_PREFIX env var to specify the first part of the URL to listen to (and then strip before forwarding). E.g. 
+Use the JUPYTERHUB_SERVICE_PREFIX env var to specify the first part of the URL to listen to (and then strip before forwarding). E.g.
 JUPYTERHUB_SERVICE_PREFIX=/user/dan will mean requests on http://localhost:8888/user/dan/something will forward to http://localhost:8500/something
 
 You can also specify --ip 0.0.0.0 for the address to listen on.
 
-Below we use the substitution {--} for the command to run, allowing us to specify --ip to jhsingle-native-proxy instead of the 
-command being run.  
+Below we use the substitution {--} for the command to run, allowing us to specify --ip to jhsingle-native-proxy instead of the
+command being run.
 
 ```
-jhsingle-native-proxy --port 8000 --destport 8505 streamlit hello {--}server.port {port} {--}server.headless True {--}server.enableCORS False --ip 0.0.0.0 
+jhsingle-native-proxy --port 8000 --destport 8505 streamlit hello {--}server.port {port} {--}server.headless True {--}server.enableCORS False --ip 0.0.0.0
 ```
 
 Similarly, use e.g. {-}m to represent -m in the final command.
@@ -78,12 +78,12 @@ Or specify presentation_path as a substitution instead of hard-coding, which is 
 python -m jhsingle_native_proxy.main --destport 0 voila {presentation_path} {--}port={port} {--}no-browser {--}Voila.server_url=/ {--}Voila.base_url={base_url}/ {--}debug --presentation_path=./Presentation.ipynb
 ```
 
-In addition, if presentation_path is provided, two further substitution variables are available: presentation_dirname and 
+In addition, if presentation_path is provided, two further substitution variables are available: presentation_dirname and
 presentation_basename. These are computed using Python's os.path.dirname and os.path.basename functions on presentation_path.
 
 ## Authentication
 
-The above examples all assume OAuth will be enforced, as per the JUPYTERHUB_* env vars.
+The above examples all assume OAuth will be enforced, as per the JUPYTERHUB\_\* env vars.
 
 Alternatives can be specified via the authtype flag:
 
@@ -101,8 +101,8 @@ jhsingle-native-proxy --authtype=none streamlit hello
 
 ### Specifying Authorized Users
 
-The env vars JUPYTERHUB_USER and JUPYTERHUB_GROUP can be used, as typical for any JupyterHub single server, to specify user/groups of 
-JupyterHub that should be allowed access via OAuth. There is an additional bespoke env var called JUPYTERHUB_ANYONE which can be set to 1 
+The env vars JUPYTERHUB_USER and JUPYTERHUB_GROUP can be used, as typical for any JupyterHub single server, to specify user/groups of
+JupyterHub that should be allowed access via OAuth. There is an additional bespoke env var called JUPYTERHUB_ANYONE which can be set to 1
 to allow any authenticated user access. (i.e. anyone who has an account on the JupyterHub)
 
 ### Extra Arguments
@@ -111,7 +111,7 @@ to allow any authenticated user access. (i.e. anyone who has an account on the J
 
 {origin_host} in the command argument will be replaced with the first 'host' seen in any request to the jhsingle-native-proxy server.
 
---last-activity-interval=300 specifies how often in seconds to update the hub to provide the last time any traffic passed through 
+--last-activity-interval=300 specifies how often in seconds to update the hub to provide the last time any traffic passed through
 the proxy (default 300). Specify 0 to never update.
 --force-keep-alive or --no-force-keep-alive: the former (default) ensures that the hub is notified of recent activity even if there wasn't any - only works if last-activity-interval is not 0.
 
@@ -129,9 +129,13 @@ the proxy (default 300). Specify 0 to never update.
 
 --websocket-max-message-size - message size in bytes allowed by websocket connections made to the underlying process (default is to rely on the tornado library defaults).
 
- --progressive - flush buffer from underlying service whenever chunks appear (this is useful to see results from Voila sooner)
+--progressive - flush buffer from underlying service whenever chunks appear (this is useful to see results from Voila sooner)
 
 ## Changelog
+
+### v0.8.3 released 25 Sep 2024
+
+- New options for Aiohttp Connector and Timeout: aiohttp-no-ssl-connector and aiohttp-request-timeout. Thanks to [aditipate](https://github.com/aditipate).
 
 ### v0.8.2 released 30 Nov 2023
 
@@ -161,7 +165,7 @@ the proxy (default 300). Specify 0 to never update.
 
 ### v0.7.0 released 12 Feb 2021
 
-- New command-line option --forward-user-info to add a X-CDSDASHBOARDS-JH-USER header to the http request to the underlying service. 
+- New command-line option --forward-user-info to add a X-CDSDASHBOARDS-JH-USER header to the http request to the underlying service.
   The header value is a JSON-encoded dict containing kind, name, admin, groups fields from the logged-in JupyterHub user if available.
 
 ### v0.6.1 released 6 Jan 2021
